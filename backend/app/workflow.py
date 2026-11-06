@@ -7,7 +7,7 @@ from .agents.assessment.agent import assess_interview
 from .agents.reporting.agent import build_report
 from .errors import AppError, unavailable
 
-AGENTS_AVAILABLE = {"plan": False, "assess": False, "report": False}
+AGENTS_AVAILABLE = {"plan": False, "assess": False, "report": True}
 
 class WorkflowState(TypedDict):
     case_id: str

@@ -4,6 +4,7 @@ Stage-one integration foundation using Python 3.11, FastAPI, Pydantic v2, SQLAlc
 
 The repository was empty when inspected. GitHub repository metadata identifies `main` as its default branch; no branch refs or commits existed. Work is on `feat/platform-assessment`.
 
+Working: emerald landing page, no-signup frontend screens, evidence-preserving reporting/coaching, health/capabilities, recruiter-authenticated case APIs, transactional persistence, expiring case-scoped session issuance, exact-version approval, budgets and schema-validated Groq adapter. Planning, interview execution and assessment return `NOT_IMPLEMENTED`. Guest-session endpoints are not implemented yet: the frontend shows an explicit session-service error rather than bypassing authentication. A fresh case cannot yet complete the live interview workflow. See [Drashti's integration handoff](docs/drashti-handoff.md).
 Working: foundation APIs, recruiter authentication, transactional persistence, exact-version approval, budgets, schema-validated Groq adapter, and the integrated text interview. Gana's ZIP has been adapted to the shared repository and contracts; browser ElevenLabs support is gated on explicit configuration and supervision. Planning, assessment and reporting still return `NOT_IMPLEMENTED` pending their implementations. Session issuance requires a saved plan. See [Gana's integration handoff](docs/gana-handoff.md) for the complete API, setup and limitations.
 
 ## Start on Windows PowerShell
@@ -19,7 +20,7 @@ Copy-Item .env.example .env
 notepad .env
 ```
 
-Set `RECRUITER_API_TOKEN` to a long random secret. Paste that same value into the frontend's password input; it is held only in memory and is never compiled into the bundle. No AI key is required to start the foundation. Do not commit `.env`.
+Set `RECRUITER_API_TOKEN` to a long random secret for the existing operational API routes. The redesigned frontend never requests this secret; it awaits the guest-cookie backend described in the handoff. No AI key is required to start the foundation or generate a report from an existing assessment. Do not commit `.env`.
 
 Terminal 1, repository root:
 
@@ -52,6 +53,7 @@ Groq is the default implemented LLM adapter. Configure `GROQ_API_KEY`, a model a
 
 The budget service distinguishes requests, tokens, credits, minutes and money. Groq reserves one request per attempt, optionally reserves a conservative token bound, and reconciles usage. A repair is a separately budgeted call. Configured money/credit/minute constraints disable Groq calls because their cost cannot be safely estimated by this adapter. Missing token counts retain the conservative reservation. Provider errors retain the request charge. Local quotas do not track calls made outside this application.
 
+Gemini and Ollama settings are present with explicit unavailable adapters. ElevenLabs, Keenable, Tavily, LlamaParse and Langfuse are unavailable integrations in this stage. Planning, interviewing and assessment are placeholders; reporting is implemented without an additional provider call. See `/api/capabilities` for configuration and implementation state.
 Gemini and Ollama settings are present with explicit unavailable adapters. Keenable, Tavily, LlamaParse and Langfuse remain unavailable integrations. The interview agent supports text; ElevenLabs browser mode is disabled by default until credentials, an authenticated agent, supervised operation, webhook and minute budget are configured. No telephone calling is included. See `/api/capabilities` for configuration and implementation state.
 
 `services/knowledge.py` provides a lazy persistent Chroma/LlamaIndex adapter. Set `EMBEDDING_MODEL` to a downloaded local Sentence Transformers directory. It uses CPU and local files only. Startup does not download a model or index CVs. Priya owns knowledge content and retrieval. Test embedding models are test-only.

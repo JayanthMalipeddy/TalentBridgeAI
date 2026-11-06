@@ -13,3 +13,7 @@ data/chroma/
 .coverage
 .cache/
 *.tsbuildinfo
+.npm-cache/
+.test-tmp*/
+test-results/
+playwright-report/
