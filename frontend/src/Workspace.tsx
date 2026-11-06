@@ -8,6 +8,8 @@ import { InterviewPage } from "./features/interview/InterviewPage";
 import {ServiceStatus} from "./ServiceStatus";
 const steps = ["Details", "Interview plan", "Interview", "Results"];
 export function Workspace() {
+  const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [channel, setChannel] = useState<"text"|"elevenlabs">("text");
   const [lastStage, setLastStage] = useState<"plan"|"assess"|"report"|null>(null);
   const [invitation, setInvitation] = useState<{session_id:string; candidate_url:string}|null>(null);
   const [interviewDone, setInterviewDone] = useState(false);
@@ -53,6 +55,10 @@ export function Workspace() {
   }
   useEffect(() => {
     void connect();
+    request<{sessions:{elevenlabs:boolean}}>("/capabilities").then(c => {
+      setVoiceAvailable(c.sessions.elevenlabs);
+      if (c.sessions.elevenlabs) setChannel("elevenlabs");
+    }).catch(() => setVoiceAvailable(false));
   }, []);
   useEffect(() => {
     if (ready && page !== "new" && page !== "status")
@@ -484,10 +490,17 @@ export function Workspace() {
               <section className="panel">
                 <p className="eyebrow">03 / INTERVIEW</p>
                 <h2>Your interview</h2>
+                {!invitation && <>
+                  <label>Interview channel<select value={channel} onChange={e => setChannel(e.target.value as "text"|"elevenlabs")}>
+                    <option value="elevenlabs" disabled={!voiceAvailable}>ElevenLabs browser voice{!voiceAvailable ? " ? setup required" : ""}</option>
+                    <option value="text">Text interview</option>
+                  </select></label>
+                  <p>{voiceAvailable ? "The candidate opens the invitation and speaks with the AI interviewer using their microphone." : "ElevenLabs voice setup is incomplete. Text is available as a clearly labelled alternative."}</p>
+                </>}
                 {!invitation && <button disabled={loading || !active} onClick={() => void run(async () => {
-                  const link = await request<{session_id:string; candidate_url:string}>("/cases/" + active!.case_id + "/sessions", "POST", {channel:"text"});
+                  const link = await request<{session_id:string; candidate_url:string}>("/cases/" + active!.case_id + "/sessions", "POST", {channel});
                   setInvitation(link);
-                })}>Start text interview</button>}
+                })}>Start {channel === "elevenlabs" ? "voice" : "text"} interview</button>}
                 {invitation && <>
                   <p><a href={invitation.candidate_url} target="_blank" rel="noreferrer">Open candidate invitation</a></p>
                   <InterviewPage sessionId={invitation.session_id} candidateToken={new URLSearchParams(new URL(invitation.candidate_url).hash.slice(1)).get("token") || ""} onCompleted={() => setInterviewDone(true)} />
