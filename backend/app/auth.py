@@ -7,7 +7,7 @@ def recruiter(request: Request, authorization: str | None = Header(default=None)
     if not expected:
         raise AppError("AUTH_NOT_CONFIGURED", "Set RECRUITER_API_TOKEN on the server", 503)
     supplied = (authorization or "").removeprefix("Bearer ")
-    if not authorization or not authorization.startswith("Bearer ") or not hmac.compare_digest(supplied, expected):
+    if not authorization or not authorization.startswith("Bearer ") or not hmac.compare_digest(supplied.encode(), expected.encode()):
         raise AppError("UNAUTHORIZED", "Valid recruiter bearer token required", 401)
 
 def candidate(request: Request, session_id: str, authorization: str | None = Header(default=None)):

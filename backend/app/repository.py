@@ -59,6 +59,12 @@ class Repository:
     def _save_artifact(self, kind, value):
         with self.transaction() as conn:
             case = self._get(conn, "case", value.case_id)
+            if kind == "plan":
+                sessions = conn.execute(select(records.c.payload).where(records.c.kind == "session")).scalars()
+                for raw in sessions:
+                    session = json.loads(raw)
+                    if session["case_id"] == value.case_id and session.get("frozen_plan") != value.model_dump():
+                        raise AppError("PLAN_FROZEN", "An interview already uses this plan; create a new case for a revised plan", 409)
             if kind == "assessment":
                 plan = self._get(conn, "plan", value.case_id)
                 if plan["plan_version"] != value.plan_version:
@@ -105,6 +111,10 @@ class Repository:
     def save_session(self, session):
         with self.transaction() as conn:
             case = self._get(conn, "case", session["case_id"])
+            if case["mode"] == "recruitment":
+                existing = conn.execute(select(records.c.payload).where(records.c.kind == "session")).scalars()
+                if any(json.loads(raw)["case_id"] == case["case_id"] for raw in existing):
+                    raise AppError("SESSION_EXISTS", "This case already has an interview; create a new case for another attempt", 409)
             if case["mode"] == "mock":
                 existing = conn.execute(select(records.c.id).where(records.c.kind == "mock_owner", records.c.id == case["case_id"])).first()
                 if existing:
@@ -113,6 +123,42 @@ class Repository:
             conn.execute(insert(records).values(kind="session", id=session["session_id"], payload=json.dumps(session)))
 
     def get_session(self, id): return self.get("session", id)
+
+    def mutate_session(self, id, mutation):
+        """Atomic session updates, transcript snapshots and a durable completion event."""
+        with self.transaction() as conn:
+            session = self._get(conn, "session", id)
+            previous_result = session.get("result")
+            mutation(session)
+            self._put(conn, "session", id, session)
+            if session.get("result") and session["result"] != previous_result:
+                result = InterviewResult.model_validate(session["result"])
+                if result.case_id != session["case_id"] or result.session_id != id:
+                    raise AppError("SESSION_MISMATCH", "Result does not match session", 409)
+                self._put(conn, "interview_session", id, result.model_dump())
+                self._put(conn, "interview", result.case_id, result.model_dump())
+                if session.get("state") in {"completed", "incomplete", "declined"}:
+                    event = {"case_id": result.case_id, "session_id": id, "plan_version": session["frozen_plan"]["plan_version"], "status": "pending", "event": "interview_completed"}
+                    conn.execute(insert(records).values(kind="workflow_event", id=id, payload=json.dumps(event)).on_conflict_do_nothing())
+                    self._put(conn, "status", result.case_id, {"status": "interview_" + result.status, "failure": None})
+            return session
+
+    def list_sessions(self):
+        with self.engine.connect() as conn:
+            return [json.loads(raw) for raw in conn.execute(select(records.c.payload).where(records.c.kind == "session")).scalars()]
+
+    def claim_voice_slot(self, session_id):
+        with self.transaction() as conn:
+            raw = conn.execute(select(records.c.payload).where(records.c.kind == "voice_slot", records.c.id == "singleton")).scalar_one_or_none()
+            if raw and json.loads(raw).get("session_id"):
+                raise AppError("VOICE_BUSY", "A voice session is reserved; reconcile it before starting another", 409)
+            self._put(conn, "voice_slot", "singleton", {"session_id": session_id})
+
+    def release_voice_slot(self, session_id):
+        with self.transaction() as conn:
+            raw = conn.execute(select(records.c.payload).where(records.c.kind == "voice_slot", records.c.id == "singleton")).scalar_one_or_none()
+            if raw and json.loads(raw).get("session_id") == session_id:
+                self._put(conn, "voice_slot", "singleton", {"session_id": None})
 
     def authenticate_session(self, id, token):
         import hmac
