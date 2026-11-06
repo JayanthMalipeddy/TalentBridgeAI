@@ -1,0 +1,12 @@
+{
+  "label": "FIXTURE DEMO — fictional inputs; not approved knowledge or live AI planning",
+  "cv_text": "Fictional Demo Candidate has practised Python HTTP clients, SQL queries and message retries in a classroom project. No real person is represented.",
+  "job_description": "Integration Engineer: build and troubleshoot REST integrations, handle authentication securely, query SQL data, and implement safe retries and idempotency.",
+  "questions": [
+    {"skill": "REST and HTTP", "question": "How would you investigate an API returning HTTP 429?"},
+    {"skill": "Secure authentication", "question": "How would you keep an integration API key out of browser code and logs?"},
+    {"skill": "SQL integration", "question": "How would you find duplicate external IDs in a SQL table?"},
+    {"skill": "Retries and idempotency", "question": "How would you avoid duplicate orders when retrying a timed-out request?"},
+    {"skill": "Troubleshooting", "question": "How would you trace an integration failure across several services?"}
+  ]
+}

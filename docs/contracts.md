@@ -52,7 +52,12 @@ Candidate routes under `/api/interviews` require their own bearer token and matc
 
 - `GET /{session_id}` returns safe session metadata.
 - `GET /{session_id}/report` returns only the owning session's mock report.
-- `POST /{session_id}/start` returns NOT_IMPLEMENTED.
+- `POST /{session_id}/consent`, `/text-answer`, `/complete` and `/stop` implement the text lifecycle.
+- `POST /{session_id}/voice-token` issues supervised browser access when configured; `/use-text` selects the alternative before issuance.
+- `POST /webhooks/elevenlabs` verifies provider HMAC authentication and records confirmed transcripts idempotently.
+- Recruiter-only `/reconcile` and `/release-voice` support missed callbacks and explicit usage review.
+
+See `gana-handoff.md` for request/response fields. The public shared Pydantic contracts and async create_session signature are unchanged. Session storage adds frozen plan and lifecycle metadata; candidate responses omit internal credentials and scoring criteria.
 
 The candidate cannot read other sessions, recruiter APIs, or recruitment reports. Tokens are random, hashed at rest and time-limited. Mock ownership cannot be silently reassigned. All application errors use `{"error":{"code":"...","message":"...","retryable":false}}`; validation errors omit submitted input to avoid echoing CVs or credentials. Unexpected errors use sanitized messages. CORS preflight rejection is handled by the CORS middleware.
 
