@@ -52,7 +52,7 @@ export function PhoneInterview({caseId,onResults}:Props) {
       {call.transcript_available && <button className="secondary" onClick={async()=>{try{setTranscript(await request(`/cases/${caseId}/phone-call/transcript`));setError('');}catch(e){setError((e as Error).message);}}}>View recovered transcript</button>}
       {transcript && <section aria-label="Recovered phone transcript"><h3>Provider-confirmed transcript</h3>
         <p>Unmapped turns are retained for review; they are not automatically assigned to a skill.</p>
-        {transcript.turns.map(t=><article className="question" key={t.turn_id}><strong>{t.speaker === 'candidate' ? 'Candidate' : 'AI interviewer'}</strong><p style={{whiteSpace:'pre-wrap'}}>{t.text}</p><small>{t.question_id ? `Question: ${t.question_id}` : 'Question mapping needs review'}</small></article>)}
+        {transcript.turns.map(t=><article className="question" key={t.turn_id}><strong>{t.speaker === 'candidate' ? 'Candidate' : 'AI interviewer'}</strong><p style={{whiteSpace:'pre-wrap'}}>{t.text}</p><small>{t.question_id ? `Question: ${t.question_id}` : 'No exact question match; see assessment for contextual evidence'}</small></article>)}
       </section>}
       {call.case_status.failure && <p role="alert">{call.case_status.failure.message}</p>}
       <p>One call attempt per case. Refreshing this page does not redial. Stop requests are handled by the voice agent; the recruiter supervises through ElevenLabs.</p>

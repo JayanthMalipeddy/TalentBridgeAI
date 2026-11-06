@@ -11,8 +11,8 @@ async def build_report(case: CaseInput, plan: InterviewPlan, interview: Intervie
     """
     if not (case.case_id == plan.case_id == interview.case_id == assessment.case_id) or assessment.plan_version != plan.plan_version:
         raise AppError("REPORT_CONTEXT_MISMATCH", "Report inputs must belong to the same case and plan", 409)
-    if not interview.consent_confirmed or interview.status != "completed" or not interview.turns:
-        raise AppError("INCOMPLETE_INTERVIEW", "A completed, consented interview is required for a report", 409)
+    if not interview.consent_confirmed or interview.status not in {"completed", "incomplete"} or not interview.turns:
+        raise AppError("INCOMPLETE_INTERVIEW", "A finished, consented interview with transcript evidence is required for a report", 409)
     turns = {turn.turn_id: turn for turn in interview.turns}
     evidence = []
     seen = set()
@@ -29,6 +29,8 @@ async def build_report(case: CaseInput, plan: InterviewPlan, interview: Intervie
     strengths = [f"{s.skill}: {s.rationale}" for s in assessment.skills if s.status == "demonstrated"]
     gaps = [f"{s.skill} ({s.status.replace('_', ' ')}): {s.rationale}" for s in assessment.skills if s.status != "demonstrated"]
     gaps.extend(assessment.limitations)
+    if interview.status == "incomplete":
+        gaps.append("Interview coverage is incomplete. Missing answers are not evidence of failure.")
     next_steps = []
     for skill in assessment.skills:
         if case.mode == "mock" and skill.status != "demonstrated":

@@ -561,7 +561,9 @@ export function Workspace() {
                 {assessment && (
                   <>
                     <h2>Assessment</h2>
-                    <p>Coverage: {Math.round(assessment.coverage * 100)}%</p>
+                    {assessment.recommendation && <p><strong>Recommendation: {assessment.recommendation.replaceAll("_", " ")}</strong></p>}
+                    <p>Scored skill coverage: {Math.round(assessment.coverage * 100)}%. This is not the candidate's overall score.</p>
+                    <p>Review the answer evidence and limitations below. The recommendation supports the recruiter's final decision.</p>
                     {assessment.skills.map((s) => (
                       <article className="question" key={s.skill}>
                         <h3>{s.skill}</h3>

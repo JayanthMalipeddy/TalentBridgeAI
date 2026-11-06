@@ -26,6 +26,7 @@ export interface Plan {
   warnings: string[];
 }
 export interface Assessment {
+  recommendation?: "review_for_submission" | "needs_more_evidence" | "does_not_yet_demonstrate_requirements";
   coverage: number;
   skills: {
     skill: string;

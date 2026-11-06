@@ -34,7 +34,7 @@ Attempts persist before POSTing to the provider. Same request/destination return
 
 The provider-side duration cap is enforced before dialling. Hang-up/withdrawal are spoken requests to the agent; supervise the provider dashboard. The app does not claim a separate server hang-up API. Transcript polling stops after duration plus three minutes and requires operator review/reconciliation. A server restart retains attempts, reservations and stage receipts.
 
-Only confirmed spoken consent permits local transcript retention. Unknown mappings remain unassessed; exact planned question matching is conservative. Completed phone transcripts trigger the existing deduplicated workflow automatically. Incomplete/declined calls do not become successful reports. Model/provider failures remain visible and require explicit stage retry.
+Only confirmed spoken consent permits local transcript retention. Exact question matching remains conservative at ingestion. Assessment can link paraphrased questions using their preceding interviewer turn and validated transcript excerpts; ambiguous answers remain unassessed. Final consented phone transcripts trigger the deduplicated assessment/report workflow even when question coverage is incomplete. Partial reports explicitly disclose missing evidence; declined calls never produce reports. Pending-review criteria remain unscored. A paused session stays paused until explicitly resumed. Model/provider failures remain visible and require explicit stage retry.
 
 ## Verification
 

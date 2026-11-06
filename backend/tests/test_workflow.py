@@ -114,3 +114,24 @@ def test_manual_recovery_preserves_budget_and_requires_running(client, contracts
     assert repo.usage_records() == before
     with pytest.raises(AppError, match='Only running'):
         module.recover(repo, case.case_id, 'assess')
+
+
+async def test_partial_interview_worker_builds_report(client, contracts):
+    ctx, session = await seeded(client, contracts)
+    def partial(s):
+        s['state'] = 'incomplete'
+        s['result'] = s['result'] | {'status': 'incomplete'}
+    ctx.repository.mutate_session(session['session_id'], partial)
+    await process_completion_events(ctx, create_workflow(ctx))
+    assert ctx.repository.get('workflow_event', session['session_id'])['status'] == 'completed'
+    report = ctx.repository.get_report('test-case')
+    assert any('Missing answers' in gap for gap in report.gaps)
+    assert ctx.repository.get_assessment('test-case').recommendation == 'needs_more_evidence'
+
+
+async def test_paused_worker_never_calls_model(client, contracts):
+    ctx, session = await seeded(client, contracts)
+    ctx.repository.mutate_session(session['session_id'], lambda s:s.update(processing_paused=True))
+    await process_completion_events(ctx, create_workflow(ctx))
+    ctx.llm.generate_structured.assert_not_awaited()
+    assert ctx.repository.get('workflow_event', session['session_id'])['status'] == 'paused'

@@ -114,7 +114,7 @@ async def process_completion_events(ctx, workflow, phone_only=False):
                 continue
             if session.get("conversation_id") and not session.get("provider_final"):
                 event["status"] = "waiting_provider"
-            elif interview.status != "completed" or not interview.consent_confirmed:
+            elif interview.status not in {"completed", "incomplete"} or not interview.consent_confirmed or not interview.turns:
                 event["status"] = "needs_review"
             else:
                 for stage in ("assess", "report"):

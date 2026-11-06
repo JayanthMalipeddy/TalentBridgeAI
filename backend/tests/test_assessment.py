@@ -89,3 +89,20 @@ async def test_pending_criteria_never_receive_scores(client, contracts):
     assert result.coverage == 0
     assert result.recommendation == 'needs_more_evidence'
     assert 'rubric' not in ctx.llm.generate_structured.call_args.args[2]['rubrics'][0]
+
+
+@pytest.mark.parametrize('valid', [True, False])
+async def test_contextual_mapping_requires_real_adjacent_question(client, contracts, valid):
+    from app.agents.assessment.agent import AnswerLink
+    c = contracts
+    ctx = configure(client, c)
+    interviewer = c['turn'].model_copy(update={'turn_id':'ask', 'speaker':'interviewer', 'question_id':None, 'text':'How would you write a test?'})
+    answer = c['turn'].model_copy(update={'question_id':None})
+    interview = c['interview'].model_copy(update={'turns':[interviewer, answer], 'status':'incomplete'})
+    ctx.llm.generate_structured.return_value = Findings(skills=[c['skill']], answer_links=[AnswerLink(
+        turn_id=answer.turn_id, question_id='q1', interviewer_turn_id='ask',
+        interviewer_excerpt=interviewer.text if valid else 'Invented question')])
+    result = await assess_interview(c['plan'], interview, ctx)
+    assert result.coverage == (1 if valid else 0)
+    assert result.recommendation == 'needs_more_evidence'
+    assert ctx.llm.generate_structured.await_count == 1
