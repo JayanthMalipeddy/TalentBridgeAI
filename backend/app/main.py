@@ -20,7 +20,7 @@ from .services.llm import LLMClient
 from .agents.interview.router import router
 from .agents.interview.service import create_session
 from .agents.planning.agent import parse_cv
-from .workflow import create_workflow
+from .workflow import create_workflow, AGENTS_AVAILABLE
 
 class SessionRequest(BaseModel):
     channel: Literal["text", "elevenlabs"]
@@ -71,7 +71,7 @@ def create_app(settings: Settings | None = None):
             "llamaparse": bool(settings.llama_cloud_api_key.get_secret_value()),
             "langfuse": bool(settings.langfuse_public_key and settings.langfuse_secret_key.get_secret_value()),
         }
-        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": {name: {"available": False, "code": "NOT_IMPLEMENTED"} for name in ["planning", "interview", "assessment", "reporting"]}, "sessions": {"text": True, "elevenlabs": False}, "integrations": {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}}
+        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": {name: {"available": AGENTS_AVAILABLE.get(stage, False), "code": "AVAILABLE" if AGENTS_AVAILABLE.get(stage, False) else "NOT_IMPLEMENTED"} for name, stage in [("planning", "plan"), ("interview", "interview"), ("assessment", "assess"), ("reporting", "report")]}, "sessions": {"text": True, "elevenlabs": False}, "integrations": {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}}
 
     @app.post("/api/cases", dependencies=[Depends(recruiter)], response_model=CaseInput, status_code=201)
     async def new_case(request: Request, job_description: str = Form(min_length=1), mode: Literal["recruitment", "mock"] = Form(), role: str = Form(min_length=1), cv_text: str | None = Form(default=None), cv_file: UploadFile | None = File(default=None)):
