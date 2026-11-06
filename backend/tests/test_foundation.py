@@ -61,10 +61,10 @@ def test_api_health_auth_and_failures(client, auth):
     response = client.post("/api/cases", data=payload, headers=auth)
     assert response.status_code == 201
     id = response.json()["case_id"]
-    for stage in ["plan", "assess"]:
-        response = client.post(f"/api/cases/{id}/{stage}", headers=auth)
-        assert response.status_code == 501
-        assert response.json()["error"]["code"] == "NOT_IMPLEMENTED"
+    response = client.post(f"/api/cases/{id}/plan", headers=auth)
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "PROVIDER_NOT_CONFIGURED"
+    assert client.post(f"/api/cases/{id}/assess", headers=auth).status_code == 404
     # Reporting is implemented, but cannot run without a confirmed plan/interview.
     response = client.post(f"/api/cases/{id}/report", headers=auth)
     assert response.status_code == 404

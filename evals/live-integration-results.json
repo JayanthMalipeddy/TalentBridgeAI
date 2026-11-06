@@ -1,0 +1,1011 @@
+{
+  "kind": "Actual Groq + local Chroma smoke; fictional CV/JD/answers; unreviewed criteria; not a benchmark",
+  "historical_failures": [
+    "First mock tailoring and assessment requests failed at provider; initial adapter recorded generic PROVIDER_ERROR. Explicit assessment retry performed within eight-request cap."
+  ],
+  "cases": [
+    {
+      "case_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892",
+      "mode": "recruitment",
+      "status": {
+        "status": "report_ready",
+        "failure": null
+      },
+      "plan": {
+        "case_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892",
+        "plan_version": "plan-1b4e31908969",
+        "knowledge_version": "kb-d2c66eb334e3",
+        "questions": [
+          {
+            "question_id": "ie-rest-02",
+            "skill": "REST APIs and HTTP",
+            "question": "You built REST APIs in Python; can you walk me through how you select HTTP status codes for an integration API, like handling duplicate create requests versus invalid input?",
+            "expected_topics": [
+              "4xx vs 5xx",
+              "409 Conflict for state conflicts",
+              "400/422 for validation",
+              "consistent error body"
+            ],
+            "rubric": {
+              "0": "Returns 200 for errors or cannot explain status code classes.",
+              "1": "Distinguishes client and server errors but chooses codes inconsistently.",
+              "2": "Chooses appropriate codes such as 409 for conflicts and explains how clients react.",
+              "3": "Uses codes deliberately, ties them to client retry behaviour and a consistent machine-readable error format."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:jd",
+                "locator": "line 1",
+                "excerpt": "Integration Engineer: REST APIs and HTTP, authentication and secure API handling, SQL and database integration, messaging retries and idempotency, troubleshooting."
+              },
+              {
+                "source_type": "cv",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:cv",
+                "locator": "line 1",
+                "excerpt": "built REST APIs in Python"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc9110--409-conflict",
+                "locator": "RFC 9110: HTTP Semantics, Section 15.5.10 <https://www.rfc-editor.org/rfc/rfc9110>",
+                "excerpt": "The 409 (Conflict) status code indicates that the request could not be completed due to a conflict with the current state of the target resource. This code is used in situations where the user might be able to resolve the conflict and resubmit the request."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc9457--problem-details",
+                "locator": "RFC 9457: Problem Details for HTTP APIs, Abstract <https://www.rfc-editor.org/rfc/rfc9457>",
+                "excerpt": "This document defines a \"problem detail\" to carry machine-readable details of errors in HTTP response content to avoid the need to define new error response formats for HTTP APIs."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-auth-03",
+            "skill": "Authentication and secure API handling",
+            "question": "You use OAuth2; what precautions do you take when handling bearer tokens or API keys in an integration?",
+            "expected_topics": [
+              "bearer token risk",
+              "TLS only",
+              "never in URLs or logs",
+              "secure storage and rotation"
+            ],
+            "rubric": {
+              "0": "No awareness of token handling risks.",
+              "1": "Mentions HTTPS but misses URL/log leakage or storage.",
+              "2": "Covers TLS, keeping tokens out of URLs/logs and secure storage.",
+              "3": "Explains the bearer threat model and concrete controls (rotation, scoping, secret manager, log redaction) used in practice."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:jd",
+                "locator": "line 1",
+                "excerpt": "Integration Engineer: REST APIs and HTTP, authentication and secure API handling, SQL and database integration, messaging retries and idempotency, troubleshooting."
+              },
+              {
+                "source_type": "cv",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:cv",
+                "locator": "line 1",
+                "excerpt": "using OAuth2"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc6750--bearer-definition",
+                "locator": "RFC 6750: OAuth 2.0 Bearer Token Usage, Section 1.2 <https://www.rfc-editor.org/rfc/rfc6750>",
+                "excerpt": "A security token with the property that any party in possession of the token (a \"bearer\") can use the token in any way that any other party in possession of it can."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc6750--always-use-tls",
+                "locator": "RFC 6750: OAuth 2.0 Bearer Token Usage, Section 5.3 <https://www.rfc-editor.org/rfc/rfc6750>",
+                "excerpt": "Clients MUST always use TLS [RFC5246] (https) or equivalent transport security when making requests with bearer tokens."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-sql-04",
+            "skill": "SQL and database integration",
+            "question": "You wrote SQL joins; describe a query you used to reconcile data between two systems and how you verified its correctness.",
+            "expected_topics": [
+              "joins / anti-joins",
+              "aggregation",
+              "data validation",
+              "handling mismatches"
+            ],
+            "rubric": {
+              "0": "Cannot describe a relevant query.",
+              "1": "Describes a query at a high level without verification.",
+              "2": "Describes the query logic and a reasonable verification approach.",
+              "3": "Specific query, edge cases (nulls, duplicates), verification and the outcome achieved."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:jd",
+                "locator": "line 1",
+                "excerpt": "Integration Engineer: REST APIs and HTTP, authentication and secure API handling, SQL and database integration, messaging retries and idempotency, troubleshooting."
+              },
+              {
+                "source_type": "cv",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:cv",
+                "locator": "line 1",
+                "excerpt": "SQL joins"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-pg-iso--read-committed",
+                "locator": "PostgreSQL Documentation: Transaction Isolation, 13.2.1 Read Committed Isolation Level <https://www.postgresql.org/docs/current/transaction-iso.html>",
+                "excerpt": "Read Committed is the default isolation level in PostgreSQL. When a transaction uses this isolation level, a SELECT query (without a FOR UPDATE/SHARE clause) sees only data committed before the query began; it never sees either uncommitted data or changes committed by concurrent transactions during the query's execution."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-msg-02",
+            "skill": "Messaging, retries and idempotency",
+            "question": "You have retry queues; should your integration retry when a downstream API times out, and how would you implement it?",
+            "expected_topics": [
+              "timeouts do not mean no side effect",
+              "retry only idempotent operations",
+              "exponential backoff and jitter",
+              "retry limits"
+            ],
+            "rubric": {
+              "0": "Retries indefinitely or never considers side effects.",
+              "1": "Retries with a fixed delay without considering duplicates.",
+              "2": "Retries idempotent operations with backoff and a limit.",
+              "3": "Explains side-effect risk, idempotency keys, backoff with jitter and overload protection."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:jd",
+                "locator": "line 1",
+                "excerpt": "Integration Engineer: REST APIs and HTTP, authentication and secure API handling, SQL and database integration, messaging retries and idempotency, troubleshooting."
+              },
+              {
+                "source_type": "cv",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:cv",
+                "locator": "line 1",
+                "excerpt": "retry queues"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-aws-retries--side-effects",
+                "locator": "Amazon Builders' Library: Timeouts, retries, and backoff with jitter, Retries and backoff <https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/>",
+                "excerpt": "A timeout or failure doesn't necessarily mean that side effects haven't happened. If doing the side effects multiple times is undesirable, a best practice is designing APIs to be idempotent, meaning they can be safely retried."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-aws-retries--backoff",
+                "locator": "Amazon Builders' Library: Timeouts, retries, and backoff with jitter, Retries and backoff <https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/>",
+                "excerpt": "To avoid this problem, we implement our clients to use backoff. This increases the time between subsequent retries, which keeps the load on the backend even."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-trbl-03",
+            "skill": "Integration troubleshooting",
+            "question": "You diagnosed timeouts using correlation IDs; what do you log in an integration to enable troubleshooting, and what must never be logged?",
+            "expected_topics": [
+              "consistent structured logging",
+              "correlation IDs",
+              "exclude tokens, secrets and personal data",
+              "masking/hashing"
+            ],
+            "rubric": {
+              "0": "Logs everything including secrets, or logs nothing useful.",
+              "1": "Logs some context but is unclear about sensitive data.",
+              "2": "Logs consistent context with correlation IDs and excludes secrets and personal data.",
+              "3": "Explains a logging standard, redaction approach and how logs were used in a real incident."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:jd",
+                "locator": "line 1",
+                "excerpt": "Integration Engineer: REST APIs and HTTP, authentication and secure API handling, SQL and database integration, messaging retries and idempotency, troubleshooting."
+              },
+              {
+                "source_type": "cv",
+                "source_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892:cv",
+                "locator": "line 1",
+                "excerpt": "Diagnosed integration timeouts using correlation IDs."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-logging--consistent-logging",
+                "locator": "OWASP Logging Cheat Sheet, Introduction <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html>",
+                "excerpt": "Application logging should be consistent within the application, consistent across an organization's application portfolio and use industry standards where relevant, so the logged event data can be consumed, correlated, analyzed and managed by a wide variety of systems."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-logging--data-to-exclude",
+                "locator": "OWASP Logging Cheat Sheet, Data to exclude <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html>",
+                "excerpt": "The following should usually not be recorded directly in the logs, but instead should be removed, masked, sanitized, hashed, or encrypted:"
+              }
+            ]
+          }
+        ],
+        "missing_information": [],
+        "warnings": [
+          "Knowledge library records are pending teammate review (PLANNING_ALLOW_PENDING_REVIEW is on); rubrics are not yet human-approved."
+        ]
+      },
+      "interview": {
+        "case_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892",
+        "session_id": "9993a3a1-11d0-48b6-8da8-f13ff40912ee",
+        "channel": "text",
+        "consent_confirmed": true,
+        "status": "completed",
+        "turns": [
+          {
+            "turn_id": "a0aa0f9c-495f-4552-bf43-41db1dd2995f",
+            "speaker": "interviewer",
+            "question_id": "ie-rest-02",
+            "text": "You built REST APIs in Python; can you walk me through how you select HTTP status codes for an integration API, like handling duplicate create requests versus invalid input?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "134c735a-a425-4a76-8cfc-75687cc84b6d",
+            "speaker": "candidate",
+            "question_id": "ie-rest-02",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "0bf3a0b9-698b-4640-958b-17b1154116d7",
+            "speaker": "interviewer",
+            "question_id": "ie-auth-03",
+            "text": "You use OAuth2; what precautions do you take when handling bearer tokens or API keys in an integration?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "5bb91a58-772a-4674-bf70-1cfa2b6f2e75",
+            "speaker": "candidate",
+            "question_id": "ie-auth-03",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "0c7523d6-5bd9-4120-bbc6-3a66549633eb",
+            "speaker": "interviewer",
+            "question_id": "ie-sql-04",
+            "text": "You wrote SQL joins; describe a query you used to reconcile data between two systems and how you verified its correctness.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "72746c4f-511a-42c4-b602-e3732ffcd4df",
+            "speaker": "candidate",
+            "question_id": "ie-sql-04",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "968b666a-9a2c-4446-9661-a973bb0ab175",
+            "speaker": "interviewer",
+            "question_id": "ie-msg-02",
+            "text": "You have retry queues; should your integration retry when a downstream API times out, and how would you implement it?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "5f16e86b-6eef-4da9-91b2-0631919e1109",
+            "speaker": "candidate",
+            "question_id": "ie-msg-02",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "6d37e08c-3e17-41c3-b741-7c4d0dad80df",
+            "speaker": "interviewer",
+            "question_id": "ie-trbl-03",
+            "text": "You diagnosed timeouts using correlation IDs; what do you log in an integration to enable troubleshooting, and what must never be logged?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "b0050171-40c8-4e95-89d3-a9f60649a533",
+            "speaker": "candidate",
+            "question_id": "ie-trbl-03",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          }
+        ],
+        "duration_seconds": 0.371201,
+        "provider_conversation_id": null
+      },
+      "assessment": {
+        "case_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892",
+        "plan_version": "plan-1b4e31908969",
+        "skills": [
+          {
+            "skill": "REST APIs and HTTP",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "The candidate references using a POST with an idempotency key and a unique SQL constraint, implying handling of duplicate creates (likely via a 409 response), and notes that invalid requests are not blindly retried. However, the answer does not explicitly describe HTTP status code selection for duplicate create requests or invalid input. This partial coverage warrants a 1.",
+            "evidence": [
+              {
+                "source_type": "transcript",
+                "source_id": "134c735a-a425-4a76-8cfc-75687cc84b6d",
+                "locator": "134c735a-a425-4a76-8cfc-75687cc84b6d",
+                "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+              }
+            ],
+            "needs_verification": true
+          },
+          {
+            "skill": "Authentication and secure API handling",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Evidence validation failed; no score accepted.",
+            "evidence": [],
+            "needs_verification": true
+          },
+          {
+            "skill": "SQL and database integration",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Evidence validation failed; no score accepted.",
+            "evidence": [],
+            "needs_verification": true
+          },
+          {
+            "skill": "Messaging, retries and idempotency",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Evidence validation failed; no score accepted.",
+            "evidence": [],
+            "needs_verification": true
+          },
+          {
+            "skill": "Integration troubleshooting",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Evidence validation failed; no score accepted.",
+            "evidence": [],
+            "needs_verification": true
+          }
+        ],
+        "coverage": 0.0,
+        "recommendation": "needs_more_evidence",
+        "limitations": [
+          "Knowledge criteria await human review. Feedback is provisional; numerical scores and skill judgments are withheld.",
+          "Invalid evidence rejected for Authentication and secure API handling.",
+          "Invalid evidence rejected for SQL and database integration.",
+          "Invalid evidence rejected for Messaging, retries and idempotency.",
+          "Invalid evidence rejected for Integration troubleshooting.",
+          "Citation existence is checked automatically; semantic support and recommendations require recruiter review."
+        ],
+        "model_id": "groq:openai/gpt-oss-20b",
+        "prompt_version": "assessment-v1"
+      },
+      "report": {
+        "case_id": "1f08b045-5c2c-4e63-bc1e-f7734e2db892",
+        "report_version": "8074cd7c-f7c5-43c9-af01-67bcc5cba85b",
+        "mode": "recruitment",
+        "summary": "Integration Engineer \u2014 0% assessment coverage. needs more evidence. Review the supporting evidence and limitations before making decisions.",
+        "strengths": [],
+        "gaps": [
+          "REST APIs and HTTP (not assessed): The candidate references using a POST with an idempotency key and a unique SQL constraint, implying handling of duplicate creates (likely via a 409 response), and notes that invalid requests are not blindly retried. However, the answer does not explicitly describe HTTP status code selection for duplicate create requests or invalid input. This partial coverage warrants a 1.",
+          "Authentication and secure API handling (not assessed): Evidence validation failed; no score accepted.",
+          "SQL and database integration (not assessed): Evidence validation failed; no score accepted.",
+          "Messaging, retries and idempotency (not assessed): Evidence validation failed; no score accepted.",
+          "Integration troubleshooting (not assessed): Evidence validation failed; no score accepted.",
+          "Knowledge criteria await human review. Feedback is provisional; numerical scores and skill judgments are withheld.",
+          "Invalid evidence rejected for Authentication and secure API handling.",
+          "Invalid evidence rejected for SQL and database integration.",
+          "Invalid evidence rejected for Messaging, retries and idempotency.",
+          "Invalid evidence rejected for Integration troubleshooting.",
+          "Citation existence is checked automatically; semantic support and recommendations require recruiter review."
+        ],
+        "evidence": [
+          {
+            "source_type": "transcript",
+            "source_id": "134c735a-a425-4a76-8cfc-75687cc84b6d",
+            "locator": "134c735a-a425-4a76-8cfc-75687cc84b6d",
+            "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+          }
+        ],
+        "suggested_next_steps": [
+          "Verify REST APIs and HTTP: ask for a concrete example and supporting detail addressing: The candidate references using a POST with an idempotency key and a unique SQL constraint, implying handling of duplicate creates (likely via a 409 response), and notes that invalid requests are not blindly retried. However, the answer does not explicitly describe HTTP status code selection for duplicate create requests or invalid input. This partial coverage warrants a 1.",
+          "Verify Authentication and secure API handling: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted.",
+          "Verify SQL and database integration: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted.",
+          "Verify Messaging, retries and idempotency: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted.",
+          "Verify Integration troubleshooting: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted."
+        ],
+        "learning_resources": [],
+        "draft_email": "Subject: Integration Engineer interview review\n\nIntegration Engineer \u2014 0% assessment coverage. needs more evidence. Review the supporting evidence and limitations before making decisions.\n\nStrengths:\nNo demonstrated strengths recorded.\n\nGaps and limitations:\nREST APIs and HTTP (not assessed): The candidate references using a POST with an idempotency key and a unique SQL constraint, implying handling of duplicate creates (likely via a 409 response), and notes that invalid requests are not blindly retried. However, the answer does not explicitly describe HTTP status code selection for duplicate create requests or invalid input. This partial coverage warrants a 1.\nAuthentication and secure API handling (not assessed): Evidence validation failed; no score accepted.\nSQL and database integration (not assessed): Evidence validation failed; no score accepted.\nMessaging, retries and idempotency (not assessed): Evidence validation failed; no score accepted.\nIntegration troubleshooting (not assessed): Evidence validation failed; no score accepted.\nKnowledge criteria await human review. Feedback is provisional; numerical scores and skill judgments are withheld.\nInvalid evidence rejected for Authentication and secure API handling.\nInvalid evidence rejected for SQL and database integration.\nInvalid evidence rejected for Messaging, retries and idempotency.\nInvalid evidence rejected for Integration troubleshooting.\nCitation existence is checked automatically; semantic support and recommendations require recruiter review.\n\nVerification questions:\nVerify REST APIs and HTTP: ask for a concrete example and supporting detail addressing: The candidate references using a POST with an idempotency key and a unique SQL constraint, implying handling of duplicate creates (likely via a 409 response), and notes that invalid requests are not blindly retried. However, the answer does not explicitly describe HTTP status code selection for duplicate create requests or invalid input. This partial coverage warrants a 1.\nVerify Authentication and secure API handling: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted.\nVerify SQL and database integration: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted.\nVerify Messaging, retries and idempotency: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted.\nVerify Integration troubleshooting: ask for a concrete example and supporting detail addressing: Evidence validation failed; no score accepted.",
+        "approval_status": "approved"
+      }
+    },
+    {
+      "case_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05",
+      "mode": "mock",
+      "status": {
+        "status": "report_ready",
+        "failure": null
+      },
+      "plan": {
+        "case_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05",
+        "plan_version": "plan-3c7599d29e6b",
+        "knowledge_version": "kb-d2c66eb334e3",
+        "questions": [
+          {
+            "question_id": "ie-rest-02",
+            "skill": "REST APIs and HTTP",
+            "question": "Walk me through how you choose HTTP status codes for an integration API, for example a duplicate create request versus invalid input.",
+            "expected_topics": [
+              "4xx vs 5xx",
+              "409 Conflict for state conflicts",
+              "400/422 for validation",
+              "consistent error body"
+            ],
+            "rubric": {
+              "0": "Returns 200 for errors or cannot explain status code classes.",
+              "1": "Distinguishes client and server errors but chooses codes inconsistently.",
+              "2": "Chooses appropriate codes such as 409 for conflicts and explains how clients react.",
+              "3": "Uses codes deliberately, ties them to client retry behaviour and a consistent machine-readable error format."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:jd",
+                "locator": "line 1",
+                "excerpt": "REST APIs and HTTP"
+              },
+              {
+                "source_type": "cv",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:cv",
+                "locator": "line 1",
+                "excerpt": "built REST APIs"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc9110--409-conflict",
+                "locator": "RFC 9110: HTTP Semantics, Section 15.5.10 <https://www.rfc-editor.org/rfc/rfc9110>",
+                "excerpt": "The 409 (Conflict) status code indicates that the request could not be completed due to a conflict with the current state of the target resource. This code is used in situations where the user might be able to resolve the conflict and resubmit the request."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc9457--problem-details",
+                "locator": "RFC 9457: Problem Details for HTTP APIs, Abstract <https://www.rfc-editor.org/rfc/rfc9457>",
+                "excerpt": "This document defines a \"problem detail\" to carry machine-readable details of errors in HTTP response content to avoid the need to define new error response formats for HTTP APIs."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-auth-02",
+            "skill": "Authentication and secure API handling",
+            "question": "How would one backend service authenticate to another service's API with OAuth 2.0, with no user involved?",
+            "expected_topics": [
+              "client credentials grant",
+              "access token scope and lifetime",
+              "token caching/refresh",
+              "secret storage"
+            ],
+            "rubric": {
+              "0": "Cannot describe service-to-service authentication.",
+              "1": "Mentions tokens or API keys without explaining the flow.",
+              "2": "Describes the client credentials grant, scopes and token expiry.",
+              "3": "Describes the flow end to end including secret storage, token caching, rotation and failure handling."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:jd",
+                "locator": "line 1",
+                "excerpt": "authentication and secure API handling"
+              },
+              {
+                "source_type": "cv",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:cv",
+                "locator": "line 1",
+                "excerpt": "using OAuth2"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc6749--client-credentials",
+                "locator": "RFC 6749: The OAuth 2.0 Authorization Framework, Section 1.3.4 <https://www.rfc-editor.org/rfc/rfc6749>",
+                "excerpt": "The client credentials (or other forms of client authentication) can be used as an authorization grant when the authorization scope is limited to the protected resources under the control of the client, or to protected resources previously arranged with the authorization server."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-rfc6749--access-token",
+                "locator": "RFC 6749: The OAuth 2.0 Authorization Framework, Section 1.4 <https://www.rfc-editor.org/rfc/rfc6749>",
+                "excerpt": "Access tokens are credentials used to access protected resources. An access token is a string representing an authorization issued to the client."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-sql-04",
+            "skill": "SQL and database integration",
+            "question": "Describe a SQL query you wrote to reconcile data between two systems. How did you check the result was correct?",
+            "expected_topics": [
+              "joins / anti-joins",
+              "aggregation",
+              "data validation",
+              "handling mismatches"
+            ],
+            "rubric": {
+              "0": "Cannot describe a relevant query.",
+              "1": "Describes a query at a high level without verification.",
+              "2": "Describes the query logic and a reasonable verification approach.",
+              "3": "Specific query, edge cases (nulls, duplicates), verification and the outcome achieved."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:jd",
+                "locator": "line 1",
+                "excerpt": "SQL and database integration"
+              },
+              {
+                "source_type": "cv",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:cv",
+                "locator": "line 1",
+                "excerpt": "SQL joins"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-pg-iso--read-committed",
+                "locator": "PostgreSQL Documentation: Transaction Isolation, 13.2.1 Read Committed Isolation Level <https://www.postgresql.org/docs/current/transaction-iso.html>",
+                "excerpt": "Read Committed is the default isolation level in PostgreSQL. When a transaction uses this isolation level, a SELECT query (without a FOR UPDATE/SHARE clause) sees only data committed before the query began; it never sees either uncommitted data or changes committed by concurrent transactions during the query's execution."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-msg-03",
+            "skill": "Messaging, retries and idempotency",
+            "question": "What is a dead-letter queue and how do you operate one?",
+            "expected_topics": [
+              "purpose of DLQ",
+              "max receive count / retry threshold",
+              "alerting on DLQ depth",
+              "redrive after fix"
+            ],
+            "rubric": {
+              "0": "Does not know what a dead-letter queue is.",
+              "1": "Knows the definition but not how to operate it.",
+              "2": "Explains thresholds, monitoring and investigating failed messages.",
+              "3": "Describes an operational process including alerting, root-cause analysis and safe redrive."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:jd",
+                "locator": "line 1",
+                "excerpt": "messaging retries and idempotency"
+              },
+              {
+                "source_type": "cv",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:cv",
+                "locator": "line 1",
+                "excerpt": "retry queues"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-sqs-dlq--dlq-purpose",
+                "locator": "Amazon SQS Developer Guide: Dead-letter queues, Dead-letter queues <https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html>",
+                "excerpt": "Amazon SQS supports dead-letter queues (DLQs), which source queues can target for messages that are not processed successfully. DLQs are useful for debugging your application because you can isolate unconsumed messages to determine why processing did not succeed."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-sqs-dlq--max-receive-count",
+                "locator": "Amazon SQS Developer Guide: Dead-letter queues, Dead-letter queues <https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html>",
+                "excerpt": "The maxReceiveCount is the number of times a consumer can receive a message from a source queue before it is moved to a dead-letter queue."
+              }
+            ]
+          },
+          {
+            "question_id": "ie-trbl-01",
+            "skill": "Integration troubleshooting",
+            "question": "A request fails somewhere across three services. How do you find where it failed?",
+            "expected_topics": [
+              "correlation / trace IDs",
+              "distributed tracing (traceparent)",
+              "structured logs",
+              "narrowing down hop by hop"
+            ],
+            "rubric": {
+              "0": "No systematic approach.",
+              "1": "Checks logs in each service manually without correlation.",
+              "2": "Uses correlation or trace IDs across services to follow the request.",
+              "3": "Describes tracing propagation, structured logs and a real investigation including root cause and fix validation."
+            },
+            "evidence": [
+              {
+                "source_type": "job_description",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:jd",
+                "locator": "line 1",
+                "excerpt": "troubleshooting"
+              },
+              {
+                "source_type": "cv",
+                "source_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05:cv",
+                "locator": "line 1",
+                "excerpt": "Diagnosed integration timeouts using correlation IDs"
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-tracecontext--distributed-tracing",
+                "locator": "W3C Recommendation: Trace Context, 1. Overview <https://www.w3.org/TR/trace-context/>",
+                "excerpt": "Distributed tracing is a methodology implemented by tracing tools to follow, analyze and debug a transaction across multiple software components."
+              },
+              {
+                "source_type": "knowledge",
+                "source_id": "ref-tracecontext--traceparent",
+                "locator": "W3C Recommendation: Trace Context, 2. Trace Context HTTP Headers <https://www.w3.org/TR/trace-context/>",
+                "excerpt": "The traceparent header represents the incoming request in a tracing system in a common format, understood by all vendors."
+              }
+            ]
+          }
+        ],
+        "missing_information": [],
+        "warnings": [
+          "Knowledge library records are pending teammate review (PLANNING_ALLOW_PENDING_REVIEW is on); rubrics are not yet human-approved.",
+          "Question tailoring unavailable (PROVIDER_ERROR); approved questions used unchanged."
+        ]
+      },
+      "interview": {
+        "case_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05",
+        "session_id": "c1d42d0d-414f-4e64-8e86-7d7db1939081",
+        "channel": "text",
+        "consent_confirmed": true,
+        "status": "completed",
+        "turns": [
+          {
+            "turn_id": "2ec8b703-eb7a-4821-9da1-a933bd0339cb",
+            "speaker": "interviewer",
+            "question_id": "ie-rest-02",
+            "text": "Walk me through how you choose HTTP status codes for an integration API, for example a duplicate create request versus invalid input.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "95cc62eb-9b94-414d-b91e-5093dc9461d2",
+            "speaker": "candidate",
+            "question_id": "ie-rest-02",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "1ff9464a-bca8-4a1b-86e1-ca13163611a4",
+            "speaker": "interviewer",
+            "question_id": "ie-auth-02",
+            "text": "How would one backend service authenticate to another service's API with OAuth 2.0, with no user involved?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "125d351b-e97f-4a13-aca7-d765f972a5f8",
+            "speaker": "candidate",
+            "question_id": "ie-auth-02",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "d3e48146-6e84-48bc-8266-ecad5664eec4",
+            "speaker": "interviewer",
+            "question_id": "ie-sql-04",
+            "text": "Describe a SQL query you wrote to reconcile data between two systems. How did you check the result was correct?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "97760b92-e5b4-49fb-bec5-0ab986668a75",
+            "speaker": "candidate",
+            "question_id": "ie-sql-04",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "acce638c-f433-433e-9eea-24e9c84ea20b",
+            "speaker": "interviewer",
+            "question_id": "ie-msg-03",
+            "text": "What is a dead-letter queue and how do you operate one?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "f9682b64-f86f-47fb-8fbe-eae26fe30ab7",
+            "speaker": "candidate",
+            "question_id": "ie-msg-03",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "c24313da-2dd9-4773-9294-a1d2b5907843",
+            "speaker": "interviewer",
+            "question_id": "ie-trbl-01",
+            "text": "A request fails somewhere across three services. How do you find where it failed?",
+            "start_ms": null,
+            "end_ms": null
+          },
+          {
+            "turn_id": "d4266086-48d6-4e93-a9a4-7674d05714b0",
+            "speaker": "candidate",
+            "question_id": "ie-trbl-01",
+            "text": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event.",
+            "start_ms": null,
+            "end_ms": null
+          }
+        ],
+        "duration_seconds": 0.088347,
+        "provider_conversation_id": null
+      },
+      "assessment": {
+        "case_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05",
+        "plan_version": "plan-3c7599d29e6b",
+        "skills": [
+          {
+            "skill": "REST APIs and HTTP",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Candidate\u2019s response focuses on idempotency, retry logic, and correlation IDs but does not address HTTP status code selection for duplicate create versus invalid input. No evidence of choosing 409, 400, or related status codes.",
+            "evidence": [
+              {
+                "source_type": "transcript",
+                "source_id": "95cc62eb-9b94-414d-b91e-5093dc9461d2",
+                "locator": "95cc62eb-9b94-414d-b91e-5093dc9461d2",
+                "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+              }
+            ],
+            "needs_verification": true
+          },
+          {
+            "skill": "Authentication and secure API handling",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Answer mentions server\u2011side OAuth tokens but lacks detail on backend service authentication via OAuth 2.0 client\u2011credentials flow without a user, which is required for the question.",
+            "evidence": [
+              {
+                "source_type": "transcript",
+                "source_id": "125d351b-e97f-4a13-aca7-d765f972a5f8",
+                "locator": "125d351b-e97f-4a13-aca7-d765f972a5f8",
+                "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+              }
+            ],
+            "needs_verification": true
+          },
+          {
+            "skill": "SQL and database integration",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "The response references a unique SQL constraint on the idempotency key but does not describe a SQL query to reconcile data between two systems or how correctness was verified.",
+            "evidence": [
+              {
+                "source_type": "transcript",
+                "source_id": "97760b92-e5b4-49fb-bec5-0ab986668a75",
+                "locator": "97760b92-e5b4-49fb-bec5-0ab986668a75",
+                "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+              }
+            ],
+            "needs_verification": true
+          },
+          {
+            "skill": "Messaging, retries and idempotency",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Answer mentions retry logic and idempotency key but does not explain how a dead\u2011letter queue is defined or operated, which is the focus of the question.",
+            "evidence": [
+              {
+                "source_type": "transcript",
+                "source_id": "f9682b64-f86f-47fb-8fbe-eae26fe30ab7",
+                "locator": "f9682b64-f86f-47fb-8fbe-eae26fe30ab7",
+                "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+              }
+            ],
+            "needs_verification": true
+          },
+          {
+            "skill": "Integration troubleshooting",
+            "status": "not_assessed",
+            "score": null,
+            "rationale": "Candidate mentions correlation IDs and checking downstream response, but does not provide a systematic approach for locating failures across three services, which the question requires.",
+            "evidence": [
+              {
+                "source_type": "transcript",
+                "source_id": "d4266086-48d6-4e93-a9a4-7674d05714b0",
+                "locator": "d4266086-48d6-4e93-a9a4-7674d05714b0",
+                "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+              }
+            ],
+            "needs_verification": true
+          }
+        ],
+        "coverage": 0.0,
+        "recommendation": "needs_more_evidence",
+        "limitations": [
+          "Knowledge criteria await human review. Feedback is provisional; numerical scores and skill judgments are withheld.",
+          "Citation existence is checked automatically; semantic support and recommendations require recruiter review."
+        ],
+        "model_id": "groq:openai/gpt-oss-20b",
+        "prompt_version": "assessment-v1"
+      },
+      "report": {
+        "case_id": "48fe1e04-1ca8-43ed-9e8c-1a465eaeab05",
+        "report_version": "24173418-e8aa-4450-a352-14488dd087c6",
+        "mode": "mock",
+        "summary": "Integration Engineer \u2014 0% assessment coverage. needs more evidence. Review the supporting evidence and limitations before making decisions.",
+        "strengths": [],
+        "gaps": [
+          "REST APIs and HTTP (not assessed): Candidate\u2019s response focuses on idempotency, retry logic, and correlation IDs but does not address HTTP status code selection for duplicate create versus invalid input. No evidence of choosing 409, 400, or related status codes.",
+          "Authentication and secure API handling (not assessed): Answer mentions server\u2011side OAuth tokens but lacks detail on backend service authentication via OAuth 2.0 client\u2011credentials flow without a user, which is required for the question.",
+          "SQL and database integration (not assessed): The response references a unique SQL constraint on the idempotency key but does not describe a SQL query to reconcile data between two systems or how correctness was verified.",
+          "Messaging, retries and idempotency (not assessed): Answer mentions retry logic and idempotency key but does not explain how a dead\u2011letter queue is defined or operated, which is the focus of the question.",
+          "Integration troubleshooting (not assessed): Candidate mentions correlation IDs and checking downstream response, but does not provide a systematic approach for locating failures across three services, which the question requires.",
+          "Knowledge criteria await human review. Feedback is provisional; numerical scores and skill judgments are withheld.",
+          "Citation existence is checked automatically; semantic support and recommendations require recruiter review."
+        ],
+        "evidence": [
+          {
+            "source_type": "transcript",
+            "source_id": "95cc62eb-9b94-414d-b91e-5093dc9461d2",
+            "locator": "95cc62eb-9b94-414d-b91e-5093dc9461d2",
+            "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+          },
+          {
+            "source_type": "transcript",
+            "source_id": "125d351b-e97f-4a13-aca7-d765f972a5f8",
+            "locator": "125d351b-e97f-4a13-aca7-d765f972a5f8",
+            "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+          },
+          {
+            "source_type": "transcript",
+            "source_id": "97760b92-e5b4-49fb-bec5-0ab986668a75",
+            "locator": "97760b92-e5b4-49fb-bec5-0ab986668a75",
+            "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+          },
+          {
+            "source_type": "transcript",
+            "source_id": "f9682b64-f86f-47fb-8fbe-eae26fe30ab7",
+            "locator": "f9682b64-f86f-47fb-8fbe-eae26fe30ab7",
+            "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+          },
+          {
+            "source_type": "transcript",
+            "source_id": "d4266086-48d6-4e93-a9a4-7674d05714b0",
+            "locator": "d4266086-48d6-4e93-a9a4-7674d05714b0",
+            "excerpt": "In a fictional order integration I used POST with an idempotency key and stored the key with a unique SQL constraint in the same transaction. OAuth tokens were kept server-side with least privilege. I retried timeouts and 503 responses with bounded exponential backoff and jitter, but did not blindly retry invalid requests. Correlation IDs linked request logs to queue events; I checked the downstream response and database transaction before replaying an event."
+          }
+        ],
+        "suggested_next_steps": [
+          "Practise REST APIs and HTTP: describe a specific example, explain your decisions and the outcome, then address this feedback: Candidate\u2019s response focuses on idempotency, retry logic, and correlation IDs but does not address HTTP status code selection for duplicate create versus invalid input. No evidence of choosing 409, 400, or related status codes.",
+          "Practise Authentication and secure API handling: describe a specific example, explain your decisions and the outcome, then address this feedback: Answer mentions server\u2011side OAuth tokens but lacks detail on backend service authentication via OAuth 2.0 client\u2011credentials flow without a user, which is required for the question.",
+          "Practise SQL and database integration: describe a specific example, explain your decisions and the outcome, then address this feedback: The response references a unique SQL constraint on the idempotency key but does not describe a SQL query to reconcile data between two systems or how correctness was verified.",
+          "Practise Messaging, retries and idempotency: describe a specific example, explain your decisions and the outcome, then address this feedback: Answer mentions retry logic and idempotency key but does not explain how a dead\u2011letter queue is defined or operated, which is the focus of the question.",
+          "Practise Integration troubleshooting: describe a specific example, explain your decisions and the outcome, then address this feedback: Candidate mentions correlation IDs and checking downstream response, but does not provide a systematic approach for locating failures across three services, which the question requires."
+        ],
+        "learning_resources": [],
+        "draft_email": null,
+        "approval_status": "not_applicable"
+      }
+    }
+  ],
+  "usage": [
+    {
+      "id": "422a1086-fd98-439a-85c4-6f6534bfd57a",
+      "provider": "groq",
+      "unit": "requests",
+      "amount": 1.0,
+      "state": "reconciled",
+      "details": "{\"model\": \"openai/gpt-oss-20b\", \"tokens\": 1539, \"elapsed_seconds\": 1.7650000000139698, \"error\": null}"
+    },
+    {
+      "id": "2fa505be-3dbc-49b6-a33e-7ae91e3f3a82",
+      "provider": "groq",
+      "unit": "tokens",
+      "amount": 1539.0,
+      "state": "reconciled",
+      "details": "{}"
+    },
+    {
+      "id": "e2c2d6b5-6dc6-4d0d-bf67-6fa620b93a90",
+      "provider": "groq",
+      "unit": "requests",
+      "amount": 1.0,
+      "state": "reconciled",
+      "details": "{\"model\": \"openai/gpt-oss-20b\", \"tokens\": 1587, \"elapsed_seconds\": 1.9839999999967404, \"error\": null}"
+    },
+    {
+      "id": "053dca35-7086-475d-93c5-45d0787e7c4f",
+      "provider": "groq",
+      "unit": "tokens",
+      "amount": 1587.0,
+      "state": "reconciled",
+      "details": "{}"
+    },
+    {
+      "id": "e6c3ee7e-c8ba-444d-a7e9-ca9496e707ed",
+      "provider": "groq",
+      "unit": "requests",
+      "amount": 1.0,
+      "state": "reconciled",
+      "details": "{\"model\": \"openai/gpt-oss-20b\", \"tokens\": 3734, \"elapsed_seconds\": 2.515999999974156, \"error\": null}"
+    },
+    {
+      "id": "04a3a052-82cd-46af-9e41-f3d29b18a066",
+      "provider": "groq",
+      "unit": "tokens",
+      "amount": 3734.0,
+      "state": "reconciled",
+      "details": "{}"
+    },
+    {
+      "id": "4085a504-74de-4bdc-8f9a-46aa761f2e55",
+      "provider": "groq",
+      "unit": "requests",
+      "amount": 1.0,
+      "state": "reconciled",
+      "details": "{\"model\": \"openai/gpt-oss-20b\", \"tokens\": 1640, \"elapsed_seconds\": 1.625, \"error\": null}"
+    },
+    {
+      "id": "eaac3a9a-4de3-44fd-8601-f14d1d54b158",
+      "provider": "groq",
+      "unit": "tokens",
+      "amount": 1640.0,
+      "state": "reconciled",
+      "details": "{}"
+    },
+    {
+      "id": "c047c277-1447-4094-8beb-7ca5b3cfb10c",
+      "provider": "groq",
+      "unit": "requests",
+      "amount": 1.0,
+      "state": "reconciled",
+      "details": "{\"model\": \"openai/gpt-oss-20b\", \"tokens\": null, \"elapsed_seconds\": 0.125, \"error\": \"PROVIDER_ERROR\"}"
+    },
+    {
+      "id": "7cb01ae4-da1a-4b64-9084-cd006ce3bc95",
+      "provider": "groq",
+      "unit": "tokens",
+      "amount": 9815.0,
+      "state": "reconciled",
+      "details": "{}"
+    },
+    {
+      "id": "44ba9b3d-2399-4ce6-b7c7-44321b73695f",
+      "provider": "groq",
+      "unit": "requests",
+      "amount": 1.0,
+      "state": "reconciled",
+      "details": "{\"model\": \"openai/gpt-oss-20b\", \"tokens\": null, \"elapsed_seconds\": 0.125, \"error\": \"PROVIDER_ERROR\"}"
+    },
+    {
+      "id": "cd012d14-f9d9-4051-9059-fef6f19651a4",
+      "provider": "groq",
+      "unit": "tokens",
+      "amount": 14175.0,
+      "state": "reconciled",
+      "details": "{}"
+    },
+    {
+      "id": "c57af07e-10ed-4b84-bc36-6ed2e992fc69",
+      "provider": "groq",
+      "unit": "requests",
+      "amount": 1.0,
+      "state": "reconciled",
+      "details": "{\"model\": \"openai/gpt-oss-20b\", \"tokens\": 3389, \"elapsed_seconds\": 2.422000000020489, \"error\": null}"
+    },
+    {
+      "id": "8bd0cdf9-315a-4110-a090-77643012a2e5",
+      "provider": "groq",
+      "unit": "tokens",
+      "amount": 3389.0,
+      "state": "reconciled",
+      "details": "{}"
+    }
+  ]
+}

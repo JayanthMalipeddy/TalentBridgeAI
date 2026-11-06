@@ -208,20 +208,9 @@ test("validation, failure recovery, plan and honest interview state", async ({
     page.getByRole("heading", { name: "Integration Engineer", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Continue to interview" }).click();
-  await expect(
-    page.getByText("Not connected · interview has not started"),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Voice interviews are temporarily unavailable.", {
-      exact: false,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Text interview unavailable" }),
-  ).toBeDisabled();
-  await capture(page, "interview-unavailable");
+  await expect(page.getByRole("button", { name: "Start text interview" })).toBeEnabled();
   await page
-    .getByRole("button", { name: "Check assessment availability" })
+    .getByRole("button", { name: "Assess saved interview" })
     .click();
   await expect(page.getByText("not assessed", { exact: true })).toBeVisible();
   await capture(page, "assessment");

@@ -34,6 +34,17 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = Field(default=3600, ge=60, le=86400)
     session_duration_seconds: int = Field(default=360, ge=60, le=480)
     session_max_duration_seconds: int = Field(default=480, ge=60, le=480)
+    guest_ttl_seconds: int = Field(default=86400, ge=60, le=604800)
+    guest_max_workspaces: int = Field(default=100, ge=1)
+    guest_max_cases: int = Field(default=5, ge=1)
+    guest_max_operations: int = Field(default=30, ge=1)
+    workflow_auto_process: bool = False
+    planning_max_cv_pages: int = Field(default=10, ge=1, le=50)
+    planning_allow_pending_review: bool = False
+    planning_enable_tavily_fallback: bool = False
+    planning_llamaparse_tier: str = ""
+    llm_max_completion_tokens: int = Field(default=4096, ge=256, le=8192)
+    interview_followups_enabled: bool = True
     max_cv_bytes: int = Field(default=1000000, gt=0)
 
     @field_validator("session_max_duration_seconds", mode="before")

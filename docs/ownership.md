@@ -9,7 +9,7 @@
 
 Read `contracts.md`, `../README.md`, `../backend/app/contracts.py`, `../backend/app/context.py`, and `../backend/app/workflow.py` before integrating.
 
-The interview integration now includes text interaction, consent, persisted turns, browser authorization and signed transcript handling. See `gana-handoff.md` for source adaptation and limitations. Planning, assessment, reporting and CV parsing remain placeholders. Automated fixtures stay in `backend/tests/`; the separately labelled synthetic text demonstration is explicitly opt-in and is not live planning/RAG.
+The interview integration now includes text interaction, consent, persisted turns, browser authorization and signed transcript handling. See `gana-handoff.md` for source adaptation and limitations. Planning, reporting and CV parsing remain placeholders in this ZIP. Jayanth’s assessment implementation is available; guest-workspace APIs and persistent workflow receipts are implemented. See PROJECT_STATUS.md for merge dependencies. Automated fixtures stay in `backend/tests/`; the separately labelled synthetic text demonstration is explicitly opt-in and is not live planning/RAG.
 
 Keep public async signatures stable. Return validated contracts; do not call hosted providers directly. Use `ctx.llm.generate_structured`, `ctx.repository`, `ctx.budget`, and `ctx.telemetry`. Do not serialize AgentContext. It holds secrets indirectly and is deliberately not a Pydantic model.
 
