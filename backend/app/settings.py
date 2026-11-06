@@ -1,0 +1,34 @@
+from pydantic import Field, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    app_env: str = "development"
+    frontend_origin: str = "http://localhost:5173"
+    database_url: str = "sqlite:///./data/talentbridge.db"
+    recruiter_api_token: SecretStr = SecretStr("")
+    llm_provider: str = "groq"
+    groq_api_key: SecretStr = SecretStr("")
+    groq_model: str = ""
+    gemini_api_key: SecretStr = SecretStr("")
+    gemini_model: str = ""
+    ollama_base_url: str = ""
+    ollama_model: str = ""
+    embedding_model: str = ""
+    embedding_max_length: int = Field(default=512, gt=0)
+    chroma_path: str = "./data/chroma"
+    elevenlabs_api_key: SecretStr = SecretStr("")
+    elevenlabs_agent_id: str = ""
+    elevenlabs_webhook_secret: SecretStr = SecretStr("")
+    keenable_api_key: SecretStr = SecretStr("")
+    tavily_api_key: SecretStr = SecretStr("")
+    llama_cloud_api_key: SecretStr = SecretStr("")
+    langfuse_public_key: str = ""
+    langfuse_secret_key: SecretStr = SecretStr("")
+    langfuse_base_url: str = ""
+    # JSON: {"groq": {"requests": 100, "tokens": 100000}}. Missing limits deny use.
+    provider_budget_limits: dict[str, dict[str, float]] = Field(default_factory=dict)
+    session_ttl_seconds: int = Field(default=3600, ge=60, le=86400)
+    session_max_duration_seconds: int = Field(default=1800, ge=60, le=7200)
+    max_cv_bytes: int = Field(default=1000000, gt=0)

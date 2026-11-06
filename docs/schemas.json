@@ -1,0 +1,938 @@
+{
+  "CaseInput": {
+    "additionalProperties": false,
+    "properties": {
+      "case_id": {
+        "title": "Case Id",
+        "type": "string"
+      },
+      "mode": {
+        "enum": [
+          "recruitment",
+          "mock"
+        ],
+        "title": "Mode",
+        "type": "string"
+      },
+      "role": {
+        "title": "Role",
+        "type": "string"
+      },
+      "cv_text": {
+        "title": "Cv Text",
+        "type": "string"
+      },
+      "job_description": {
+        "title": "Job Description",
+        "type": "string"
+      },
+      "schema_version": {
+        "const": "1.0",
+        "default": "1.0",
+        "title": "Schema Version",
+        "type": "string"
+      }
+    },
+    "required": [
+      "case_id",
+      "mode",
+      "role",
+      "cv_text",
+      "job_description"
+    ],
+    "title": "CaseInput",
+    "type": "object"
+  },
+  "EvidenceRef": {
+    "additionalProperties": false,
+    "properties": {
+      "source_type": {
+        "enum": [
+          "cv",
+          "job_description",
+          "knowledge",
+          "transcript"
+        ],
+        "title": "Source Type",
+        "type": "string"
+      },
+      "source_id": {
+        "title": "Source Id",
+        "type": "string"
+      },
+      "locator": {
+        "title": "Locator",
+        "type": "string"
+      },
+      "excerpt": {
+        "title": "Excerpt",
+        "type": "string"
+      }
+    },
+    "required": [
+      "source_type",
+      "source_id",
+      "locator",
+      "excerpt"
+    ],
+    "title": "EvidenceRef",
+    "type": "object"
+  },
+  "Question": {
+    "$defs": {
+      "EvidenceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_type": {
+            "enum": [
+              "cv",
+              "job_description",
+              "knowledge",
+              "transcript"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "locator": {
+            "title": "Locator",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id",
+          "locator",
+          "excerpt"
+        ],
+        "title": "EvidenceRef",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "question_id": {
+        "title": "Question Id",
+        "type": "string"
+      },
+      "skill": {
+        "title": "Skill",
+        "type": "string"
+      },
+      "question": {
+        "title": "Question",
+        "type": "string"
+      },
+      "expected_topics": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Expected Topics",
+        "type": "array"
+      },
+      "rubric": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "propertyNames": {
+          "enum": [
+            "0",
+            "1",
+            "2",
+            "3"
+          ]
+        },
+        "title": "Rubric",
+        "type": "object"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/EvidenceRef"
+        },
+        "title": "Evidence",
+        "type": "array"
+      }
+    },
+    "required": [
+      "question_id",
+      "skill",
+      "question",
+      "expected_topics",
+      "rubric",
+      "evidence"
+    ],
+    "title": "Question",
+    "type": "object"
+  },
+  "InterviewPlan": {
+    "$defs": {
+      "EvidenceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_type": {
+            "enum": [
+              "cv",
+              "job_description",
+              "knowledge",
+              "transcript"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "locator": {
+            "title": "Locator",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id",
+          "locator",
+          "excerpt"
+        ],
+        "title": "EvidenceRef",
+        "type": "object"
+      },
+      "Question": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "expected_topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Expected Topics",
+            "type": "array"
+          },
+          "rubric": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "0",
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "title": "Rubric",
+            "type": "object"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            "title": "Evidence",
+            "type": "array"
+          }
+        },
+        "required": [
+          "question_id",
+          "skill",
+          "question",
+          "expected_topics",
+          "rubric",
+          "evidence"
+        ],
+        "title": "Question",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "case_id": {
+        "title": "Case Id",
+        "type": "string"
+      },
+      "plan_version": {
+        "title": "Plan Version",
+        "type": "string"
+      },
+      "knowledge_version": {
+        "title": "Knowledge Version",
+        "type": "string"
+      },
+      "questions": {
+        "items": {
+          "$ref": "#/$defs/Question"
+        },
+        "title": "Questions",
+        "type": "array"
+      },
+      "missing_information": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Missing Information",
+        "type": "array"
+      },
+      "warnings": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Warnings",
+        "type": "array"
+      }
+    },
+    "required": [
+      "case_id",
+      "plan_version",
+      "knowledge_version",
+      "questions",
+      "missing_information",
+      "warnings"
+    ],
+    "title": "InterviewPlan",
+    "type": "object"
+  },
+  "TranscriptTurn": {
+    "additionalProperties": false,
+    "properties": {
+      "turn_id": {
+        "title": "Turn Id",
+        "type": "string"
+      },
+      "speaker": {
+        "enum": [
+          "interviewer",
+          "candidate"
+        ],
+        "title": "Speaker",
+        "type": "string"
+      },
+      "question_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Question Id"
+      },
+      "text": {
+        "title": "Text",
+        "type": "string"
+      },
+      "start_ms": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Start Ms"
+      },
+      "end_ms": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "End Ms"
+      }
+    },
+    "required": [
+      "turn_id",
+      "speaker",
+      "question_id",
+      "text",
+      "start_ms",
+      "end_ms"
+    ],
+    "title": "TranscriptTurn",
+    "type": "object"
+  },
+  "InterviewResult": {
+    "$defs": {
+      "TranscriptTurn": {
+        "additionalProperties": false,
+        "properties": {
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          },
+          "speaker": {
+            "enum": [
+              "interviewer",
+              "candidate"
+            ],
+            "title": "Speaker",
+            "type": "string"
+          },
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "start_ms": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Ms"
+          },
+          "end_ms": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Ms"
+          }
+        },
+        "required": [
+          "turn_id",
+          "speaker",
+          "question_id",
+          "text",
+          "start_ms",
+          "end_ms"
+        ],
+        "title": "TranscriptTurn",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "case_id": {
+        "title": "Case Id",
+        "type": "string"
+      },
+      "session_id": {
+        "title": "Session Id",
+        "type": "string"
+      },
+      "channel": {
+        "enum": [
+          "text",
+          "elevenlabs"
+        ],
+        "title": "Channel",
+        "type": "string"
+      },
+      "consent_confirmed": {
+        "title": "Consent Confirmed",
+        "type": "boolean"
+      },
+      "status": {
+        "enum": [
+          "completed",
+          "incomplete",
+          "declined"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "turns": {
+        "items": {
+          "$ref": "#/$defs/TranscriptTurn"
+        },
+        "title": "Turns",
+        "type": "array"
+      },
+      "duration_seconds": {
+        "minimum": 0,
+        "title": "Duration Seconds",
+        "type": "number"
+      },
+      "provider_conversation_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Provider Conversation Id"
+      }
+    },
+    "required": [
+      "case_id",
+      "session_id",
+      "channel",
+      "consent_confirmed",
+      "status",
+      "turns",
+      "duration_seconds",
+      "provider_conversation_id"
+    ],
+    "title": "InterviewResult",
+    "type": "object"
+  },
+  "SkillAssessment": {
+    "$defs": {
+      "EvidenceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_type": {
+            "enum": [
+              "cv",
+              "job_description",
+              "knowledge",
+              "transcript"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "locator": {
+            "title": "Locator",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id",
+          "locator",
+          "excerpt"
+        ],
+        "title": "EvidenceRef",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "skill": {
+        "title": "Skill",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "demonstrated",
+          "partially_demonstrated",
+          "not_demonstrated",
+          "not_assessed"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "score": {
+        "anyOf": [
+          {
+            "maximum": 3,
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Score"
+      },
+      "rationale": {
+        "title": "Rationale",
+        "type": "string"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/EvidenceRef"
+        },
+        "title": "Evidence",
+        "type": "array"
+      },
+      "needs_verification": {
+        "title": "Needs Verification",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "skill",
+      "status",
+      "score",
+      "rationale",
+      "evidence",
+      "needs_verification"
+    ],
+    "title": "SkillAssessment",
+    "type": "object"
+  },
+  "Assessment": {
+    "$defs": {
+      "EvidenceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_type": {
+            "enum": [
+              "cv",
+              "job_description",
+              "knowledge",
+              "transcript"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "locator": {
+            "title": "Locator",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id",
+          "locator",
+          "excerpt"
+        ],
+        "title": "EvidenceRef",
+        "type": "object"
+      },
+      "SkillAssessment": {
+        "additionalProperties": false,
+        "properties": {
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "demonstrated",
+              "partially_demonstrated",
+              "not_demonstrated",
+              "not_assessed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 3,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "needs_verification": {
+            "title": "Needs Verification",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "skill",
+          "status",
+          "score",
+          "rationale",
+          "evidence",
+          "needs_verification"
+        ],
+        "title": "SkillAssessment",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "case_id": {
+        "title": "Case Id",
+        "type": "string"
+      },
+      "plan_version": {
+        "title": "Plan Version",
+        "type": "string"
+      },
+      "skills": {
+        "items": {
+          "$ref": "#/$defs/SkillAssessment"
+        },
+        "title": "Skills",
+        "type": "array"
+      },
+      "coverage": {
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Coverage",
+        "type": "number"
+      },
+      "recommendation": {
+        "enum": [
+          "review_for_submission",
+          "needs_more_evidence",
+          "does_not_yet_demonstrate_requirements"
+        ],
+        "title": "Recommendation",
+        "type": "string"
+      },
+      "limitations": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Limitations",
+        "type": "array"
+      },
+      "model_id": {
+        "title": "Model Id",
+        "type": "string"
+      },
+      "prompt_version": {
+        "title": "Prompt Version",
+        "type": "string"
+      }
+    },
+    "required": [
+      "case_id",
+      "plan_version",
+      "skills",
+      "coverage",
+      "recommendation",
+      "limitations",
+      "model_id",
+      "prompt_version"
+    ],
+    "title": "Assessment",
+    "type": "object"
+  },
+  "LearningResource": {
+    "additionalProperties": false,
+    "properties": {
+      "title": {
+        "title": "Title",
+        "type": "string"
+      },
+      "url": {
+        "title": "Url",
+        "type": "string"
+      }
+    },
+    "required": [
+      "title",
+      "url"
+    ],
+    "title": "LearningResource",
+    "type": "object"
+  },
+  "Report": {
+    "$defs": {
+      "EvidenceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_type": {
+            "enum": [
+              "cv",
+              "job_description",
+              "knowledge",
+              "transcript"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "locator": {
+            "title": "Locator",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id",
+          "locator",
+          "excerpt"
+        ],
+        "title": "EvidenceRef",
+        "type": "object"
+      },
+      "LearningResource": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "LearningResource",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "case_id": {
+        "title": "Case Id",
+        "type": "string"
+      },
+      "report_version": {
+        "title": "Report Version",
+        "type": "string"
+      },
+      "mode": {
+        "enum": [
+          "recruitment",
+          "mock"
+        ],
+        "title": "Mode",
+        "type": "string"
+      },
+      "summary": {
+        "title": "Summary",
+        "type": "string"
+      },
+      "strengths": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Strengths",
+        "type": "array"
+      },
+      "gaps": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Gaps",
+        "type": "array"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/EvidenceRef"
+        },
+        "title": "Evidence",
+        "type": "array"
+      },
+      "suggested_next_steps": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Suggested Next Steps",
+        "type": "array"
+      },
+      "learning_resources": {
+        "items": {
+          "$ref": "#/$defs/LearningResource"
+        },
+        "title": "Learning Resources",
+        "type": "array"
+      },
+      "draft_email": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Draft Email"
+      },
+      "approval_status": {
+        "enum": [
+          "draft",
+          "approved",
+          "not_applicable"
+        ],
+        "title": "Approval Status",
+        "type": "string"
+      }
+    },
+    "required": [
+      "case_id",
+      "report_version",
+      "mode",
+      "summary",
+      "strengths",
+      "gaps",
+      "evidence",
+      "suggested_next_steps",
+      "learning_resources",
+      "draft_email",
+      "approval_status"
+    ],
+    "title": "Report",
+    "type": "object"
+  }
+}

@@ -1,0 +1,71 @@
+# TalentBridge AI — shared foundation
+
+Stage-one integration foundation using Python 3.11, FastAPI, Pydantic v2, SQLAlchemy/SQLite, LangGraph, persistent Chroma, LlamaIndex/local Sentence Transformers and React/TypeScript/Vite/Tailwind.
+
+The repository was empty when inspected. GitHub repository metadata identifies `main` as its default branch; no branch refs or commits existed. Work is on `feat/platform-assessment`.
+
+Working: health/capabilities, recruiter-authenticated case creation and retrieval, transactional persistence, expiring case-scoped session issuance, exact-version approval, budgets, schema-validated Groq adapter, workflow scaffolding and frontend shell. Planning, interview execution, assessment and reporting deliberately return `NOT_IMPLEMENTED`. There are no fake live AI results. Session issuance requires a saved plan; therefore a fresh case cannot yet proceed through the interview workflow.
+
+## Start on Windows PowerShell
+
+Prerequisites: Python 3.11 via `uv`, Node 22.12+ (tested with Node 24.18.0).
+
+From the repository root:
+
+```powershell
+uv python install 3.11
+uv sync --locked
+Copy-Item .env.example .env
+notepad .env
+```
+
+Set `RECRUITER_API_TOKEN` to a long random secret. Paste that same value into the frontend's password input; it is held only in memory and is never compiled into the bundle. No AI key is required to start the foundation. Do not commit `.env`.
+
+Terminal 1, repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+Terminal 2, repository root:
+
+```powershell
+Set-Location frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+Open http://localhost:5173. Health: http://127.0.0.1:8000/api/health. OpenAPI: http://127.0.0.1:8000/openapi.json; interactive docs: http://127.0.0.1:8000/docs. Keep the single-instance development servers local. If exposing a demo, terminate HTTPS and limit request body size at your proxy. CORS accepts only `FRONTEND_ORIGIN` (comma-separated exact origins).
+
+## Validate
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+npm.cmd --prefix frontend run build
+```
+
+`uv.lock` pins the full Python dependency graph and `frontend/package-lock.json` pins npm dependencies. Use locked installs. Tests cover every shared contract, persistence/reopening, report version approval, auth isolation, expiration, CORS, concurrent reservations, bounded schema repair and local retrieval wiring. No live hosted-provider test or production embedding-model quality evaluation is claimed.
+
+## Providers and budgets
+
+Groq is the default implemented LLM adapter. Configure `GROQ_API_KEY`, a model available to your account supporting JSON mode in `GROQ_MODEL`, and an explicit request allowance, e.g. `PROVIDER_BUDGET_LIMITS={"groq":{"requests":20,"tokens":50000}}`. This is a local lifetime spending ceiling, not a declaration of your provider's real quota. Choose limits within verified free allowances and disable paid overages in the provider account. Empty or unknown quotas deny calls. The application never enables paid overages.
+
+The budget service distinguishes requests, tokens, credits, minutes and money. Groq reserves one request per attempt, optionally reserves a conservative token bound, and reconciles usage. A repair is a separately budgeted call. Configured money/credit/minute constraints disable Groq calls because their cost cannot be safely estimated by this adapter. Missing token counts retain the conservative reservation. Provider errors retain the request charge. Local quotas do not track calls made outside this application.
+
+Gemini and Ollama settings are present with explicit unavailable adapters. ElevenLabs, Keenable, Tavily, LlamaParse and Langfuse are unavailable integrations in this stage. All four agents are placeholders. See `/api/capabilities` for configuration and implementation state.
+
+`services/knowledge.py` provides a lazy persistent Chroma/LlamaIndex adapter. Set `EMBEDDING_MODEL` to a downloaded local Sentence Transformers directory. It uses CPU and local files only. Startup does not download a model or index CVs. Priya owns knowledge content and retrieval. Test embedding models are test-only.
+
+Candidate links contain random tokens in the URL fragment, never query strings, and the database stores only SHA-256 hashes. Sessions expire after `SESSION_TTL_SECONDS`. The candidate shell currently explains that interview integration is pending and clears the fragment. Gana must implement token handoff and consent before enabling interviews. Mock cases have exactly one owning session. Recruiter routes cannot read mock reports. An expired owning session loses report access; renewal is not implemented.
+
+## Handoff
+
+Read [contracts](docs/contracts.md), [ownership](docs/ownership.md), [contracts.py](backend/app/contracts.py), [context.py](backend/app/context.py), [repository.py](backend/app/repository.py), and [workflow.py](backend/app/workflow.py).
+
+Official references checked for implementation:
+
+- [Groq JSON output and validation](https://console.groq.com/docs/structured-outputs)
+- [Groq API endpoint and request fields](https://console.groq.com/docs/api-reference)
+- [LangGraph StateGraph compilation](https://reference.langchain.com/python/langgraph/graph/state/StateGraph/compile)
+- [Chroma persistent client](https://docs.trychroma.com/reference/python)
+- [LlamaIndex local embeddings](https://developers.llamaindex.ai/python/framework/module_guides/models/embeddings/)
