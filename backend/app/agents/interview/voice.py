@@ -107,14 +107,14 @@ def ingest_payload(payload, ctx):
     if len(matches) != 1:
         raise AppError("UNKNOWN_CONVERSATION", "Conversation was not authorized by this application", 409)
     session = matches[0]
+    if data.get("status") not in {"done", "failed"}:
+        raise AppError("TRANSCRIPT_PENDING", "Provider conversation is not final", 409, True)
     initiation = data.get("conversation_initiation_client_data") or {}
     if not isinstance(initiation, dict) or not isinstance(initiation.get("dynamic_variables", {}), dict):
         raise AppError("INVALID_WEBHOOK", "Invalid conversation binding fields", 422)
     variables = initiation.get("dynamic_variables") or {}
     if data.get("agent_id") != session.get("voice_agent_id") or any(variables.get(k) != v for k, v in session["voice_variables"].items()):
         raise AppError("VOICE_BINDING_MISMATCH", "Provider conversation does not match the frozen interview configuration", 409)
-    if data.get("status") not in {"done", "failed"}:
-        raise AppError("TRANSCRIPT_PENDING", "Provider conversation is not final", 409, True)
     duplicate = False
     def record(s):
         nonlocal duplicate
@@ -125,9 +125,9 @@ def ingest_payload(payload, ctx):
             result = build_result(data, s)
         except (ValueError, TypeError, KeyError, AttributeError):
             raise AppError("INVALID_WEBHOOK", "Transcript does not match the expected provider schema", 422)
-        s.update(call_state=result.status, result=result.model_dump(), turns=[t.model_dump() for t in result.turns], state=result.status,
+        s.update(call_state=result.status, call_message="Provider transcript received. Unmapped answers require review." if result.status == "incomplete" else "Provider transcript received.", provider_status=data["status"], result=result.model_dump(), turns=[t.model_dump() for t in result.turns], state=result.status,
                  consent_confirmed=result.consent_confirmed, provider_final=True, current_turn_id=None)
-        s["warnings"].append("Voice question IDs are assigned only to exact planned questions; uncertain turns remain unassigned.")
+        s["warnings"].append("Voice question IDs require a unique full-question match after punctuation normalization; uncertain turns remain unassigned.")
         if (data.get("metadata") or {}).get("call_duration_secs") is None:
             s["warnings"].append("Provider duration is unknown; result duration is 0 and reserved minutes are retained.")
     saved = ctx.repository.mutate_session(session["session_id"], record)

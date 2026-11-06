@@ -34,6 +34,8 @@ def public_call(s, ctx):
     return {'session_id': s['session_id'], 'case_id': s['case_id'], 'state': s.get('call_state', 'unknown'),
             'phone_last_four': s.get('phone_last_four'), 'provider_final': bool(s.get('provider_final')),
             'interview_status': (s.get('result') or {}).get('status'),
+            'provider_status': s.get('provider_status'), 'processing_paused': bool(s.get('processing_paused')),
+            'transcript_available': bool(s.get('provider_final') and (s.get('result') or {}).get('turns')),
             'case_status': ctx.repository.get('status', s['case_id']),
             'message': s.get('call_message', 'Waiting for provider-confirmed transcript.')}
 

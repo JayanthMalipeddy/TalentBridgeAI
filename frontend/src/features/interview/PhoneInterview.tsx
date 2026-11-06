@@ -1,9 +1,10 @@
 ﻿import {useEffect, useRef, useState} from 'react';
 import {ApiError, request} from '../../api';
 import type {Assessment, Report} from '../../contracts';
-type Call = {state:string; session_id:string; phone_last_four:string; provider_final:boolean; interview_status:string|null; case_status:{status:string;failure?:{code:string;message:string}|null}; message:string};
+type Call = {provider_status?:string; processing_paused?:boolean; transcript_available?:boolean; state:string; session_id:string; phone_last_four:string; provider_final:boolean; interview_status:string|null; case_status:{status:string;failure?:{code:string;message:string}|null}; message:string};
 type Props = {caseId:string; onResults:(assessment:Assessment,report:Report)=>void};
 export function PhoneInterview({caseId,onResults}:Props) {
+  const [transcript,setTranscript]=useState<{turns:{turn_id:string;speaker:string;question_id:string|null;text:string}[]}|null>(null);
   const [number,setNumber]=useState(''),[token,setToken]=useState(''),[permission,setPermission]=useState(false);
   const [call,setCall]=useState<Call|null>(null),[missing,setMissing]=useState<string[]>([]),[ready,setReady]=useState(false);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -20,10 +21,10 @@ export function PhoneInterview({caseId,onResults}:Props) {
     } catch(e){setError((e as Error).message);}
   })();},[caseId]);
   useEffect(()=>{
-    if(!call || ['report_ready','failed'].includes(call.case_status.status) || ['declined','needs_review','dial_unknown'].includes(call.state))return;
+    if(!call || call.processing_paused || ['report_ready','failed'].includes(call.case_status.status) || ['declined','needs_review','dial_unknown'].includes(call.state))return;
     const id=setInterval(()=>{request<Call>(`/cases/${caseId}/phone-call`).then(setCall).catch(e=>setError(e.message));},5000);
     return()=>clearInterval(id);
-  },[caseId,call?.state,call?.case_status.status]);
+  },[caseId,call?.state,call?.case_status.status,call?.processing_paused]);
   async function dial(){
     setBusy(true);setError('');setUncertain(true);
     try {
@@ -46,8 +47,13 @@ export function PhoneInterview({caseId,onResults}:Props) {
       {uncertain&&!busy && <button className="secondary" onClick={async()=>{try{setCall(await request<Call>(`/cases/${caseId}/phone-call`));}catch(e){setError('Call outcome needs operator review. Do not place another call. '+(e as Error).message);}}}>Check existing call status</button>}
     </>}
     {call && <>
-      <p role="status"><strong>Call: {call.state.replaceAll('_',' ')}</strong> · Number ending {call.phone_last_four}</p>
-      <p>{call.message}</p><p>Processing: {call.case_status.status.replaceAll('_',' ')}</p>
+      <p role="status"><strong>Call: {call.provider_status === 'done' ? 'ended' : call.state.replaceAll('_',' ')}</strong> · Number ending {call.phone_last_four}</p>
+      <p>{call.message}</p><p>Processing: {call.processing_paused ? "Transcript recovered; assessment paused at your request." : call.case_status.status.replaceAll('_',' ')}</p>
+      {call.transcript_available && <button className="secondary" onClick={async()=>{try{setTranscript(await request(`/cases/${caseId}/phone-call/transcript`));setError('');}catch(e){setError((e as Error).message);}}}>View recovered transcript</button>}
+      {transcript && <section aria-label="Recovered phone transcript"><h3>Provider-confirmed transcript</h3>
+        <p>Unmapped turns are retained for review; they are not automatically assigned to a skill.</p>
+        {transcript.turns.map(t=><article className="question" key={t.turn_id}><strong>{t.speaker === 'candidate' ? 'Candidate' : 'AI interviewer'}</strong><p style={{whiteSpace:'pre-wrap'}}>{t.text}</p><small>{t.question_id ? `Question: ${t.question_id}` : 'Question mapping needs review'}</small></article>)}
+      </section>}
       {call.case_status.failure && <p role="alert">{call.case_status.failure.message}</p>}
       <p>One call attempt per case. Refreshing this page does not redial. Stop requests are handled by the voice agent; the recruiter supervises through ElevenLabs.</p>
       {call.case_status.status==='report_ready' && <button onClick={async()=>{try{const a=await request<Assessment>(`/cases/${caseId}/assessment`);const r=await request<Report>(`/cases/${caseId}/report`);onResults(a,r);}catch(e){setError((e as Error).message);}}}>View assessment and report</button>}

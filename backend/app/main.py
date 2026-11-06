@@ -189,6 +189,17 @@ def create_app(settings: Settings | None = None):
         if not matches: raise AppError("NOT_FOUND", "No phone interview started", 404)
         return phone.public_call(matches[0], ctx)
 
+    @app.get("/api/cases/{case_id}/phone-call/transcript", dependencies=[Depends(owned_case)])
+    def phone_transcript(case_id: str, request: Request):
+        repo = request.app.state.ctx.repository
+        matches = [s for s in repo.list_sessions() if s["case_id"] == case_id and s.get("transport") == "phone"]
+        if not matches or not matches[0].get("provider_final"):
+            raise AppError("TRANSCRIPT_PENDING", "Provider transcript is not available yet", 409)
+        result = repo.get_interview(case_id)
+        if not result.consent_confirmed:
+            raise AppError("CONSENT_REQUIRED", "No consented transcript is retained", 409)
+        return result
+
     @app.post("/api/cases/{case_id}/assess", dependencies=[Depends(owned_case)], response_model=Assessment)
     async def assess(case_id: str, request: Request):
         return await run_stage(case_id, "assess", request)

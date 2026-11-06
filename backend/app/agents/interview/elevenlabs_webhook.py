@@ -6,6 +6,7 @@ and consent plus signed provider data are required before storing speech.
 import hashlib
 import hmac
 import time
+import re
 from ...contracts import InterviewResult, TranscriptTurn
 from ...errors import AppError
 
@@ -44,7 +45,12 @@ def build_result(data, session):
             text, role = entry.get("message"), entry.get("role")
             if not isinstance(text, str) or not text.strip() or role not in {"agent", "user"}: continue
             if role == "agent":
-                matches = [q["question_id"] for q in session["frozen_plan"]["questions"] if " ".join(q["question"].casefold().split()) == " ".join(text.casefold().split())]
+                # Voice turns often add a greeting or transition around an unchanged question.
+                # Require the entire normalized question and a unique match; never fuzzy-match paraphrases.
+                normalize = lambda value: " ".join(re.findall(r"\w+", value.casefold()))
+                spoken = " " + normalize(text) + " "
+                matches = [q["question_id"] for q in session["frozen_plan"]["questions"]
+                           if normalize(q["question"]) and " " + normalize(q["question"]) + " " in spoken]
                 current_qid = matches[0] if len(matches) == 1 else None
             elif current_qid: answered.add(current_qid)
             start = entry.get("time_in_call_secs")

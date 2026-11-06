@@ -108,6 +108,10 @@ async def process_completion_events(ctx, workflow, phone_only=False):
             interview = ctx.repository.get_interview(event["case_id"])
             session = ctx.repository.get_session(event["session_id"])
             if phone_only and session.get("transport") != "phone": continue
+            if session.get("processing_paused"):
+                event["status"] = "paused"
+                ctx.repository.put("workflow_event", event_id, event)
+                continue
             if session.get("conversation_id") and not session.get("provider_final"):
                 event["status"] = "waiting_provider"
             elif interview.status != "completed" or not interview.consent_confirmed:
