@@ -1,0 +1,31 @@
+{
+  "document_id": "ref-logging",
+  "title": "OWASP Logging Cheat Sheet",
+  "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+  "chunks": [
+    {
+      "document_id": "ref-logging",
+      "chunk_id": "ref-logging--consistent-logging",
+      "title": "OWASP Logging Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "section": "Introduction",
+      "skill": "integration_troubleshooting",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Application logging should be consistent within the application, consistent across an organization's application portfolio and use industry standards where relevant, so the logged event data can be consumed, correlated, analyzed and managed by a wide variety of systems."
+    },
+    {
+      "document_id": "ref-logging",
+      "chunk_id": "ref-logging--data-to-exclude",
+      "title": "OWASP Logging Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "section": "Data to exclude",
+      "skill": "integration_troubleshooting",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The following should usually not be recorded directly in the logs, but instead should be removed, masked, sanitized, hashed, or encrypted:"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "document_id": "ref-sqs-alo",
+  "title": "Amazon SQS Developer Guide: At-least-once delivery",
+  "source_url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html",
+  "chunks": [
+    {
+      "document_id": "ref-sqs-alo",
+      "chunk_id": "ref-sqs-alo--duplicates",
+      "title": "Amazon SQS Developer Guide: At-least-once delivery",
+      "source_url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html",
+      "section": "At-least-once delivery",
+      "skill": "messaging_idempotency",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Design your applications to be idempotent (they should not be affected adversely when processing the same message more than once)."
+    }
+  ]
+}

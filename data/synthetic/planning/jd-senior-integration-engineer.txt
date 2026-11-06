@@ -1,0 +1,13 @@
+Job title: Senior Integration Engineer
+Company: Harbourline Energy (fictional)
+
+What you will do
+Lead the event-driven integration platform that connects metering devices, billing and customer systems.
+
+Essential
+- Kafka or another message broker in production, including retry policies, idempotency and dead-letter handling.
+- Designing resilient REST APIs and handling partner rate limits (HTTP 429) and outages.
+- Leading troubleshooting of cross-system incidents with distributed tracing and structured logging.
+
+Desirable
+- Mentoring junior engineers.

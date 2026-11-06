@@ -1,0 +1,31 @@
+{
+  "document_id": "ref-rfc9457",
+  "title": "RFC 9457: Problem Details for HTTP APIs",
+  "source_url": "https://www.rfc-editor.org/rfc/rfc9457",
+  "chunks": [
+    {
+      "document_id": "ref-rfc9457",
+      "chunk_id": "ref-rfc9457--problem-details",
+      "title": "RFC 9457: Problem Details for HTTP APIs",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9457",
+      "section": "Abstract",
+      "skill": "rest_http",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "This document defines a \"problem detail\" to carry machine-readable details of errors in HTTP response content to avoid the need to define new error response formats for HTTP APIs."
+    },
+    {
+      "document_id": "ref-rfc9457",
+      "chunk_id": "ref-rfc9457--detail-member",
+      "title": "RFC 9457: Problem Details for HTTP APIs",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9457",
+      "section": "Section 3.1.4",
+      "skill": "integration_troubleshooting",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The \"detail\" string, if present, ought to focus on helping the client correct the problem, rather than giving debugging information."
+    }
+  ]
+}

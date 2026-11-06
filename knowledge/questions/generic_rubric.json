@@ -1,0 +1,17 @@
+{
+  "document_id": "qbank-generic",
+  "chunk_id": "generic-rubric",
+  "title": "Generic evidence rubric (fallback)",
+  "source_url": "",
+  "skill": "*",
+  "version": "1",
+  "review_status": "pending_review",
+  "retrieved_at": "2026-11-06",
+  "rubric": {
+    "0": "No relevant evidence in the answer.",
+    "1": "Relevant but vague or generic; no personal contribution or specifics.",
+    "2": "Specific example with the candidate's own actions.",
+    "3": "Specific example with own actions, measurable outcome and trade-offs considered."
+  },
+  "note": "Used only when no reviewed question record exists for a required skill; the plan then lists the gap in missing_information."
+}

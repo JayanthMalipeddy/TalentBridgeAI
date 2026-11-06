@@ -1,0 +1,586 @@
+{
+  "document_id": "qbank-integration-engineer",
+  "title": "Integration Engineer question bank",
+  "records": [
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-rest-01",
+      "question_id": "ie-rest-01",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "skill": "rest_http",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "A client retries a request after a timeout. Which HTTP methods can it safely repeat, and how would you design a POST endpoint that may be retried?",
+      "expected_topics": [
+        "safe vs idempotent methods",
+        "PUT/DELETE idempotency",
+        "POST is not idempotent by default",
+        "idempotency key or natural key for POST"
+      ],
+      "rubric": {
+        "0": "Cannot distinguish safe or idempotent methods, or claims every method is safe to retry.",
+        "1": "Knows GET is safe but is vague about PUT/DELETE/POST behaviour on retry.",
+        "2": "Correctly explains safe vs idempotent methods and why POST needs extra design to be retried.",
+        "3": "Explains the semantics precisely and gives a concrete design (e.g. idempotency key, stored result) with trade-offs from real work."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc9110--idempotent-methods",
+        "ref-rfc9110--safe-methods",
+        "ref-idem-draft--purpose"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-rest-02",
+      "question_id": "ie-rest-02",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "skill": "rest_http",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "Walk me through how you choose HTTP status codes for an integration API, for example a duplicate create request versus invalid input.",
+      "expected_topics": [
+        "4xx vs 5xx",
+        "409 Conflict for state conflicts",
+        "400/422 for validation",
+        "consistent error body"
+      ],
+      "rubric": {
+        "0": "Returns 200 for errors or cannot explain status code classes.",
+        "1": "Distinguishes client and server errors but chooses codes inconsistently.",
+        "2": "Chooses appropriate codes such as 409 for conflicts and explains how clients react.",
+        "3": "Uses codes deliberately, ties them to client retry behaviour and a consistent machine-readable error format."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc9110--409-conflict",
+        "ref-rfc9457--problem-details"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-rest-03",
+      "question_id": "ie-rest-03",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6585",
+      "skill": "rest_http",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "Your integration starts receiving 429 responses from a partner API. What do you do in the client?",
+      "expected_topics": [
+        "rate limiting meaning of 429",
+        "respect Retry-After",
+        "backoff",
+        "throttle/queue requests"
+      ],
+      "rubric": {
+        "0": "Suggests retrying immediately in a loop or ignoring the error.",
+        "1": "Knows 429 means rate limited but has no concrete client strategy.",
+        "2": "Honours Retry-After, adds backoff and limits concurrency.",
+        "3": "Describes a measured strategy (budgeting, backoff with jitter, queueing, alerting) from a real incident."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc6585--429-too-many-requests",
+        "ref-rfc9110--retry-after",
+        "ref-aws-retries--backoff"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-rest-04",
+      "question_id": "ie-rest-04",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9457",
+      "skill": "rest_http",
+      "role": "integration_engineer",
+      "seniority": "senior",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "How do you return errors from an API so that client teams can handle them programmatically?",
+      "expected_topics": [
+        "problem details format",
+        "stable error codes",
+        "human-readable detail vs debugging info",
+        "status code consistency"
+      ],
+      "rubric": {
+        "0": "No structured error format; free-text or stack traces returned.",
+        "1": "Has an error body but fields are ad hoc or leak internals.",
+        "2": "Uses a consistent machine-readable error format with codes and helpful detail.",
+        "3": "Designs a versioned error contract (e.g. RFC 9457 style), avoids leaking internals, and explains client handling."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc9457--problem-details",
+        "ref-rfc9457--detail-member"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-auth-01",
+      "question_id": "ie-auth-01",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "skill": "api_auth_security",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "Explain the difference between a 401 and a 403 response, and give an integration example of each.",
+      "expected_topics": [
+        "401 missing/invalid credentials",
+        "403 authenticated but not permitted",
+        "WWW-Authenticate challenge",
+        "least privilege"
+      ],
+      "rubric": {
+        "0": "Treats 401 and 403 as interchangeable.",
+        "1": "Partially correct distinction without examples.",
+        "2": "Correct distinction with realistic examples (expired token vs missing scope).",
+        "3": "Correct distinction, examples, and how clients/monitoring should respond to each."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc9110--401-unauthorized",
+        "ref-rfc9110--403-forbidden"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-auth-02",
+      "question_id": "ie-auth-02",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6749",
+      "skill": "api_auth_security",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "How would one backend service authenticate to another service's API with OAuth 2.0, with no user involved?",
+      "expected_topics": [
+        "client credentials grant",
+        "access token scope and lifetime",
+        "token caching/refresh",
+        "secret storage"
+      ],
+      "rubric": {
+        "0": "Cannot describe service-to-service authentication.",
+        "1": "Mentions tokens or API keys without explaining the flow.",
+        "2": "Describes the client credentials grant, scopes and token expiry.",
+        "3": "Describes the flow end to end including secret storage, token caching, rotation and failure handling."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc6749--client-credentials",
+        "ref-rfc6749--access-token"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-auth-03",
+      "question_id": "ie-auth-03",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6750",
+      "skill": "api_auth_security",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "What precautions do you take when handling bearer tokens or API keys in an integration?",
+      "expected_topics": [
+        "bearer token risk",
+        "TLS only",
+        "never in URLs or logs",
+        "secure storage and rotation"
+      ],
+      "rubric": {
+        "0": "No awareness of token handling risks.",
+        "1": "Mentions HTTPS but misses URL/log leakage or storage.",
+        "2": "Covers TLS, keeping tokens out of URLs/logs and secure storage.",
+        "3": "Explains the bearer threat model and concrete controls (rotation, scoping, secret manager, log redaction) used in practice."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc6750--bearer-definition",
+        "ref-rfc6750--always-use-tls",
+        "ref-rfc6750--no-tokens-in-urls",
+        "ref-restsec--no-secrets-in-url"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-auth-04",
+      "question_id": "ie-auth-04",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html",
+      "skill": "api_auth_security",
+      "role": "integration_engineer",
+      "seniority": "senior",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "A partner asks to send their API key as a query parameter because it is easier. How do you respond?",
+      "expected_topics": [
+        "secrets in URLs are logged",
+        "use headers over HTTPS",
+        "risk explanation to partner",
+        "alternative secure options"
+      ],
+      "rubric": {
+        "0": "Accepts the request without concern.",
+        "1": "Senses a risk but cannot explain it.",
+        "2": "Explains URL logging risk and proposes header-based auth over HTTPS.",
+        "3": "Explains the risk, proposes secure alternatives and how to roll the change out with the partner."
+      },
+      "reference_chunk_ids": [
+        "ref-restsec--no-secrets-in-url",
+        "ref-restsec--https-only",
+        "ref-rfc6750--no-tokens-in-urls"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-sql-01",
+      "question_id": "ie-sql-01",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "skill": "sql_database",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "How do you write database queries in integration code so that data from external systems cannot cause SQL injection?",
+      "expected_topics": [
+        "parameterised queries / prepared statements",
+        "no string concatenation",
+        "least-privilege database accounts",
+        "input validation"
+      ],
+      "rubric": {
+        "0": "Builds SQL by string concatenation or cannot explain injection.",
+        "1": "Knows injection is a risk but the mitigation is vague (e.g. escaping only).",
+        "2": "Uses parameterised queries and avoids concatenation.",
+        "3": "Parameterised queries plus least privilege and validation, with an example from real code."
+      },
+      "reference_chunk_ids": [
+        "ref-sqli--definition",
+        "ref-sqli--prepared-statements",
+        "ref-sqli--no-concatenation",
+        "ref-sqli--least-privilege"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-sql-02",
+      "question_id": "ie-sql-02",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.postgresql.org/docs/current/sql-insert.html",
+      "skill": "sql_database",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "An integration receives the same customer record several times. How would you write it to the database without creating duplicates?",
+      "expected_topics": [
+        "unique constraint / natural key",
+        "upsert (INSERT ... ON CONFLICT)",
+        "atomicity under concurrency",
+        "idempotent writes"
+      ],
+      "rubric": {
+        "0": "Would insert every time or check-then-insert without considering races.",
+        "1": "Mentions checking for existence first but ignores concurrency.",
+        "2": "Uses a unique key with an atomic upsert.",
+        "3": "Explains atomic upsert, race conditions and how this makes the consumer idempotent."
+      },
+      "reference_chunk_ids": [
+        "ref-pg-insert--on-conflict-upsert",
+        "ref-sqs-alo--duplicates"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-sql-03",
+      "question_id": "ie-sql-03",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "skill": "sql_database",
+      "role": "integration_engineer",
+      "seniority": "senior",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "What transaction isolation level does your database use by default, and when has isolation mattered in your work?",
+      "expected_topics": [
+        "default isolation (e.g. Read Committed in PostgreSQL)",
+        "dirty / non-repeatable / phantom reads",
+        "choosing stricter isolation",
+        "locking trade-offs"
+      ],
+      "rubric": {
+        "0": "No understanding of transactions or isolation.",
+        "1": "Knows transactions exist but not isolation levels or anomalies.",
+        "2": "Names the default level and explains the anomalies it allows or prevents.",
+        "3": "Gives a real case where isolation affected correctness and how it was resolved."
+      },
+      "reference_chunk_ids": [
+        "ref-pg-iso--read-committed",
+        "ref-pg-iso--dirty-read"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-sql-04",
+      "question_id": "ie-sql-04",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "skill": "sql_database",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "Describe a SQL query you wrote to reconcile data between two systems. How did you check the result was correct?",
+      "expected_topics": [
+        "joins / anti-joins",
+        "aggregation",
+        "data validation",
+        "handling mismatches"
+      ],
+      "rubric": {
+        "0": "Cannot describe a relevant query.",
+        "1": "Describes a query at a high level without verification.",
+        "2": "Describes the query logic and a reasonable verification approach.",
+        "3": "Specific query, edge cases (nulls, duplicates), verification and the outcome achieved."
+      },
+      "reference_chunk_ids": [
+        "ref-pg-iso--read-committed"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-msg-01",
+      "question_id": "ie-msg-01",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html",
+      "skill": "messaging_idempotency",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "Your queue consumer can receive the same message more than once. How do you make processing safe?",
+      "expected_topics": [
+        "at-least-once delivery",
+        "idempotent consumers",
+        "deduplication key",
+        "atomic state change"
+      ],
+      "rubric": {
+        "0": "Assumes exactly-once delivery.",
+        "1": "Knows duplicates happen but has no concrete handling.",
+        "2": "Makes the consumer idempotent using a deduplication key or idempotent write.",
+        "3": "Explains the delivery guarantee, a concrete dedup design and how it was tested."
+      },
+      "reference_chunk_ids": [
+        "ref-sqs-alo--duplicates",
+        "ref-pg-insert--on-conflict-upsert"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-msg-02",
+      "question_id": "ie-msg-02",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+      "skill": "messaging_idempotency",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "A downstream API times out. Should your integration retry, and how?",
+      "expected_topics": [
+        "timeouts do not mean no side effect",
+        "retry only idempotent operations",
+        "exponential backoff and jitter",
+        "retry limits"
+      ],
+      "rubric": {
+        "0": "Retries indefinitely or never considers side effects.",
+        "1": "Retries with a fixed delay without considering duplicates.",
+        "2": "Retries idempotent operations with backoff and a limit.",
+        "3": "Explains side-effect risk, idempotency keys, backoff with jitter and overload protection."
+      },
+      "reference_chunk_ids": [
+        "ref-aws-retries--side-effects",
+        "ref-aws-retries--backoff",
+        "ref-aws-retries--overload"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-msg-03",
+      "question_id": "ie-msg-03",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html",
+      "skill": "messaging_idempotency",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "What is a dead-letter queue and how do you operate one?",
+      "expected_topics": [
+        "purpose of DLQ",
+        "max receive count / retry threshold",
+        "alerting on DLQ depth",
+        "redrive after fix"
+      ],
+      "rubric": {
+        "0": "Does not know what a dead-letter queue is.",
+        "1": "Knows the definition but not how to operate it.",
+        "2": "Explains thresholds, monitoring and investigating failed messages.",
+        "3": "Describes an operational process including alerting, root-cause analysis and safe redrive."
+      },
+      "reference_chunk_ids": [
+        "ref-sqs-dlq--dlq-purpose",
+        "ref-sqs-dlq--max-receive-count"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-msg-04",
+      "question_id": "ie-msg-04",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/",
+      "skill": "messaging_idempotency",
+      "role": "integration_engineer",
+      "seniority": "senior",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "How would you design an API so a client can safely retry a payment or order creation request?",
+      "expected_topics": [
+        "idempotency key header",
+        "server stores key and result",
+        "same response on retry",
+        "key expiry and conflicts"
+      ],
+      "rubric": {
+        "0": "No mechanism; relies on the client not retrying.",
+        "1": "Suggests checking for duplicates without a clear key strategy.",
+        "2": "Uses a client-generated idempotency key and returns the stored result on retry.",
+        "3": "Full design including key scope, expiry, concurrent duplicates and mismatched payloads."
+      },
+      "reference_chunk_ids": [
+        "ref-idem-draft--purpose",
+        "ref-idem-draft--key-definition",
+        "ref-aws-retries--side-effects"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-trbl-01",
+      "question_id": "ie-trbl-01",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.w3.org/TR/trace-context/",
+      "skill": "integration_troubleshooting",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "A request fails somewhere across three services. How do you find where it failed?",
+      "expected_topics": [
+        "correlation / trace IDs",
+        "distributed tracing (traceparent)",
+        "structured logs",
+        "narrowing down hop by hop"
+      ],
+      "rubric": {
+        "0": "No systematic approach.",
+        "1": "Checks logs in each service manually without correlation.",
+        "2": "Uses correlation or trace IDs across services to follow the request.",
+        "3": "Describes tracing propagation, structured logs and a real investigation including root cause and fix validation."
+      },
+      "reference_chunk_ids": [
+        "ref-tracecontext--distributed-tracing",
+        "ref-tracecontext--traceparent",
+        "ref-logging--consistent-logging"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-trbl-02",
+      "question_id": "ie-trbl-02",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "skill": "integration_troubleshooting",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "A partner API starts returning 503 errors intermittently. How do you investigate and protect your integration?",
+      "expected_topics": [
+        "503 meaning (temporary unavailability)",
+        "Retry-After / backoff",
+        "monitoring and alerting",
+        "communication with partner"
+      ],
+      "rubric": {
+        "0": "Cannot interpret the error.",
+        "1": "Recognises a server-side problem but has no plan.",
+        "2": "Interprets 503 correctly, applies backoff and monitors the impact.",
+        "3": "Structured investigation, protective measures (backoff, circuit breaking, queuing) and partner escalation."
+      },
+      "reference_chunk_ids": [
+        "ref-rfc9110--503-unavailable",
+        "ref-rfc9110--retry-after",
+        "ref-aws-retries--overload"
+      ]
+    },
+    {
+      "document_id": "qbank-integration-engineer",
+      "chunk_id": "ie-trbl-03",
+      "question_id": "ie-trbl-03",
+      "title": "Integration Engineer question bank",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "skill": "integration_troubleshooting",
+      "role": "integration_engineer",
+      "seniority": "mid",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "question": "What do you log in an integration to make troubleshooting possible, and what must never be logged?",
+      "expected_topics": [
+        "consistent structured logging",
+        "correlation IDs",
+        "exclude tokens, secrets and personal data",
+        "masking/hashing"
+      ],
+      "rubric": {
+        "0": "Logs everything including secrets, or logs nothing useful.",
+        "1": "Logs some context but is unclear about sensitive data.",
+        "2": "Logs consistent context with correlation IDs and excludes secrets and personal data.",
+        "3": "Explains a logging standard, redaction approach and how logs were used in a real incident."
+      },
+      "reference_chunk_ids": [
+        "ref-logging--consistent-logging",
+        "ref-logging--data-to-exclude"
+      ]
+    }
+  ]
+}

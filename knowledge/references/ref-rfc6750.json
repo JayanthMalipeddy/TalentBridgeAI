@@ -1,0 +1,43 @@
+{
+  "document_id": "ref-rfc6750",
+  "title": "RFC 6750: OAuth 2.0 Bearer Token Usage",
+  "source_url": "https://www.rfc-editor.org/rfc/rfc6750",
+  "chunks": [
+    {
+      "document_id": "ref-rfc6750",
+      "chunk_id": "ref-rfc6750--bearer-definition",
+      "title": "RFC 6750: OAuth 2.0 Bearer Token Usage",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6750",
+      "section": "Section 1.2",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "A security token with the property that any party in possession of the token (a \"bearer\") can use the token in any way that any other party in possession of it can."
+    },
+    {
+      "document_id": "ref-rfc6750",
+      "chunk_id": "ref-rfc6750--always-use-tls",
+      "title": "RFC 6750: OAuth 2.0 Bearer Token Usage",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6750",
+      "section": "Section 5.3",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Clients MUST always use TLS [RFC5246] (https) or equivalent transport security when making requests with bearer tokens."
+    },
+    {
+      "document_id": "ref-rfc6750",
+      "chunk_id": "ref-rfc6750--no-tokens-in-urls",
+      "title": "RFC 6750: OAuth 2.0 Bearer Token Usage",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6750",
+      "section": "Section 5.3",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Bearer tokens SHOULD NOT be passed in page URLs (for example, as query string parameters). Instead, bearer tokens SHOULD be passed in HTTP message headers or message bodies for which confidentiality measures are taken."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Unreviewed web research results are written here at runtime as `web-*.json`. They are never indexed or used for scoring. A teammate must review them before any content is promoted into `../references/`.

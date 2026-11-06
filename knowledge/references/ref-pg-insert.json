@@ -1,0 +1,19 @@
+{
+  "document_id": "ref-pg-insert",
+  "title": "PostgreSQL Documentation: INSERT",
+  "source_url": "https://www.postgresql.org/docs/current/sql-insert.html",
+  "chunks": [
+    {
+      "document_id": "ref-pg-insert",
+      "chunk_id": "ref-pg-insert--on-conflict-upsert",
+      "title": "PostgreSQL Documentation: INSERT",
+      "source_url": "https://www.postgresql.org/docs/current/sql-insert.html",
+      "section": "ON CONFLICT Clause",
+      "skill": "sql_database",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "ON CONFLICT DO UPDATE guarantees an atomic INSERT or UPDATE outcome; provided there is no independent error, one of those two outcomes is guaranteed, even under high concurrency."
+    }
+  ]
+}

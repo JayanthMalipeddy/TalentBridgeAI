@@ -1,0 +1,17 @@
+Maya Okafor (fictional candidate)
+maya.okafor@example.com | +44 7700 900123
+
+Summary
+Integration engineer with 5 years building partner and payment integrations.
+
+Experience
+Integration Engineer, Bluefin Payments (2021-2025)
+- Built REST APIs in Python/FastAPI for merchant onboarding and documented them with OpenAPI.
+- Wrote PostgreSQL queries and INSERT ... ON CONFLICT upserts to sync merchant records without duplicates.
+- Implemented idempotency keys for payment creation so client retries never charged twice.
+- Ran RabbitMQ consumers with exponential backoff and a dead-letter queue, with alerts on queue depth.
+- Integrated partners using OAuth 2.0 client credentials; stored secrets in a vault and rotated them quarterly.
+- Introduced correlation IDs and distributed tracing, cutting incident diagnosis time from hours to minutes.
+
+Education
+BSc Computer Science

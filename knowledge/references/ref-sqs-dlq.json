@@ -1,0 +1,31 @@
+{
+  "document_id": "ref-sqs-dlq",
+  "title": "Amazon SQS Developer Guide: Dead-letter queues",
+  "source_url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html",
+  "chunks": [
+    {
+      "document_id": "ref-sqs-dlq",
+      "chunk_id": "ref-sqs-dlq--dlq-purpose",
+      "title": "Amazon SQS Developer Guide: Dead-letter queues",
+      "source_url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html",
+      "section": "Dead-letter queues",
+      "skill": "messaging_idempotency",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Amazon SQS supports dead-letter queues (DLQs), which source queues can target for messages that are not processed successfully. DLQs are useful for debugging your application because you can isolate unconsumed messages to determine why processing did not succeed."
+    },
+    {
+      "document_id": "ref-sqs-dlq",
+      "chunk_id": "ref-sqs-dlq--max-receive-count",
+      "title": "Amazon SQS Developer Guide: Dead-letter queues",
+      "source_url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html",
+      "section": "Dead-letter queues",
+      "skill": "messaging_idempotency",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The maxReceiveCount is the number of times a consumer can receive a message from a source queue before it is moved to a dead-letter queue."
+    }
+  ]
+}

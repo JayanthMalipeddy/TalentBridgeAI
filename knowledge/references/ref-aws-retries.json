@@ -1,0 +1,43 @@
+{
+  "document_id": "ref-aws-retries",
+  "title": "Amazon Builders' Library: Timeouts, retries, and backoff with jitter",
+  "source_url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+  "chunks": [
+    {
+      "document_id": "ref-aws-retries",
+      "chunk_id": "ref-aws-retries--side-effects",
+      "title": "Amazon Builders' Library: Timeouts, retries, and backoff with jitter",
+      "source_url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+      "section": "Retries and backoff",
+      "skill": "messaging_idempotency",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "A timeout or failure doesn't necessarily mean that side effects haven't happened. If doing the side effects multiple times is undesirable, a best practice is designing APIs to be idempotent, meaning they can be safely retried."
+    },
+    {
+      "document_id": "ref-aws-retries",
+      "chunk_id": "ref-aws-retries--overload",
+      "title": "Amazon Builders' Library: Timeouts, retries, and backoff with jitter",
+      "source_url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+      "section": "Retries and backoff",
+      "skill": "messaging_idempotency",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "When failures are caused by overload, retries that increase load can make matters significantly worse."
+    },
+    {
+      "document_id": "ref-aws-retries",
+      "chunk_id": "ref-aws-retries--backoff",
+      "title": "Amazon Builders' Library: Timeouts, retries, and backoff with jitter",
+      "source_url": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+      "section": "Retries and backoff",
+      "skill": "messaging_idempotency",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "To avoid this problem, we implement our clients to use backoff. This increases the time between subsequent retries, which keeps the load on the backend even."
+    }
+  ]
+}

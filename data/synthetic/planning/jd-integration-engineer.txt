@@ -1,0 +1,15 @@
+Job title: Integration Engineer (mid-level)
+Company: Northwind Logistics (fictional)
+
+About the role
+You will build and operate integrations between our order platform, partner carriers and finance systems.
+
+Requirements
+- Design and build REST APIs and consume partner HTTP APIs, including correct use of status codes.
+- Strong SQL: write queries against PostgreSQL, design upserts and reason about transactions.
+- Message queues (RabbitMQ or AWS SQS): retries, idempotent consumers and dead-letter queues.
+- Secure API handling: OAuth 2.0 client credentials, API keys and TLS.
+- Troubleshooting production integrations using logs, correlation IDs and tracing.
+
+Nice to have
+- Experience with OpenAPI specifications.

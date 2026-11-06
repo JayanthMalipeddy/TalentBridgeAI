@@ -1,0 +1,31 @@
+{
+  "document_id": "ref-tracecontext",
+  "title": "W3C Recommendation: Trace Context",
+  "source_url": "https://www.w3.org/TR/trace-context/",
+  "chunks": [
+    {
+      "document_id": "ref-tracecontext",
+      "chunk_id": "ref-tracecontext--distributed-tracing",
+      "title": "W3C Recommendation: Trace Context",
+      "source_url": "https://www.w3.org/TR/trace-context/",
+      "section": "1. Overview",
+      "skill": "integration_troubleshooting",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Distributed tracing is a methodology implemented by tracing tools to follow, analyze and debug a transaction across multiple software components."
+    },
+    {
+      "document_id": "ref-tracecontext",
+      "chunk_id": "ref-tracecontext--traceparent",
+      "title": "W3C Recommendation: Trace Context",
+      "source_url": "https://www.w3.org/TR/trace-context/",
+      "section": "2. Trace Context HTTP Headers",
+      "skill": "integration_troubleshooting",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The traceparent header represents the incoming request in a tracing system in a common format, understood by all vendors."
+    }
+  ]
+}
