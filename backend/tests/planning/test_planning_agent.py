@@ -89,8 +89,10 @@ async def test_required_skill_coverage_when_cv_lacks_sql(indexed_settings, tmp_p
     assert any(e.source_type == "job_description" and "Strong SQL" in e.excerpt for e in sql[0].evidence)
     assert not any(e.source_type == "cv" for e in sql[0].evidence)
     assert any(f"CV does not state experience with {SQL}" in m for m in plan.missing_information)
-    sql_item = next(i for i in llm.calls[1]["payload"]["items"] if i["skill"] == SQL)
-    assert sql_item["verified_cv_claims"] == []
+    # Only questions backed by a verified CV claim are sent for tailoring (keeps output small).
+    tailor_items = llm.calls[1]["payload"]["items"]
+    assert {i["skill"] for i in tailor_items} == {"REST APIs and HTTP", "Messaging, retries and idempotency"}
+    assert all(len(i["verified_cv_claims"]) == 1 for i in tailor_items)
     assert "You mention" not in sql[0].question
 
 
@@ -216,6 +218,13 @@ async def test_tailoring_failure_uses_approved_questions(indexed_settings, tmp_p
     library = load_library(KNOWLEDGE)
     assert all(q.question == library.questions[q.question_id].question for q in plan.questions)
     assert any("tailoring unavailable (PROVIDER_ERROR)" in w for w in plan.warnings)
+
+
+async def test_no_tailoring_call_without_verified_claims(indexed_settings, tmp_path):
+    llm = FakeLLM({"planning.extract": extraction_for(JD_REQS, [("rest_http", "not in the CV at all")])})
+    plan = await plan_case(case("cv-02-shallow.txt"), make_ctx(indexed_settings, llm), config=make_config(), research=WebResearch(make_ctx(indexed_settings), tmp_path, CATALOGUE))
+    assert [c["task"] for c in llm.calls] == ["planning.extract"]  # one Groq request only
+    assert len(plan.questions) == 5 and not any(e.source_type == "cv" for q in plan.questions for e in q.evidence)
 
 
 async def test_vector_index_unavailable_is_reported(tmp_path):

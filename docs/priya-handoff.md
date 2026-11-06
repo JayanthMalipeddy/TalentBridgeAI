@@ -19,17 +19,17 @@
 | Rebuild command | `python -m app.agents.planning.index --rebuild` (see Run). Upserts by `chunk_id` into the shared `talentbridge_knowledge` Chroma collection and removes retired or changed records. Writes `knowledge_version` to `CHROMA_PATH/planning_index_manifest.json`. A second run is a no-op. Unreviewed research and CVs are never indexed. |
 | 3. RAG | `retrieval.py`: LlamaIndex `VectorStoreIndex.from_vector_store` over `services/knowledge.local_knowledge` (shared Chroma path and local embeddings). Results are filtered in the vector query by `skill`, `item_type` and `review_status IN allowed`, then re-checked in code. Context is limited to top-k ≤ 3 and a character cap. Excerpts come from the library by `chunk_id`, so they are exact. CV/JD evidence (`source_type` cv / job_description, `source_id` `<case>:cv|jd`) is kept separate from knowledge evidence. |
 | 4. Web research | `research.py`: Keenable (`POST https://api.keenable.ai/v1/search`, `X-API-Key`) first. Tavily (`POST https://api.tavily.com/search`, Bearer) only when Keenable fails or returns nothing **and** `PLANNING_ENABLE_TAVILY_FALLBACK=true`. Each call goes through `ctx.budget.reserve/reconcile`. Queries come only from a fixed template plus the skill catalogue, and an allow-list guard rejects any other word, email, phone or URL. At most 2 searches per plan. Results are cached and saved to `knowledge/unreviewed/web-*.json` as `unreviewed`; they are never loaded, indexed or used for scoring. A failure only produces a warning. |
-| 5. Planning agent | `build_plan` in `agent.py` makes 2 small `ctx.llm.generate_structured` calls, which fits the shared adapter's 1024-token output cap. (1) Extract JD requirements and CV claims, with CV and JD wrapped in `<cv>`/`<job_description>` tags as untrusted data. Code keeps only catalogue skills and excerpts found word for word on a single line, and a keyword scan of the JD acts as a safety net for required skills. (2) Reword the chosen approved questions around verified CV claims only. **Code** assembles exactly 5 questions in JD priority order. The rubric (0–3) and expected topics are copied from reviewed records, never written by the model. Each question cites JD, CV and knowledge evidence. Missing CV evidence, extraction uncertainty, discarded excerpts and knowledge gaps go to `missing_information`. Plan versioning: `knowledge_version` = hash of library content, review state and embedding model; `plan_version` = hash of the plan content. Re-planning is refused with `PLAN_FROZEN` once an interview exists. |
-| 6. Tests | 35 planning tests in `backend/tests/planning/`, using fixtures, a fake LLM, `httpx.MockTransport` and a tiny local bag-of-words embedding model. No network calls. |
+| 5. Planning agent | `build_plan` in `agent.py` makes 2 small `ctx.llm.generate_structured` calls, which fits the shared adapter's 1024-token output cap. (1) Extract JD requirements and CV claims, with CV and JD wrapped in `<cv>`/`<job_description>` tags as untrusted data. Code keeps only catalogue skills and excerpts found word for word on a single line, and a keyword scan of the JD acts as a safety net for required skills. (2) Reword only the chosen questions that have a verified CV claim (one claim each, under 45 words), and skip the call if none do. **Code** assembles exactly 5 questions in JD priority order. The rubric (0–3) and expected topics are copied from reviewed records, never written by the model. Each question cites JD, CV and knowledge evidence. Missing CV evidence, extraction uncertainty, discarded excerpts and knowledge gaps go to `missing_information`. Plan versioning: `knowledge_version` = hash of library content, review state and embedding model; `plan_version` = hash of the plan content. Re-planning is refused with `PLAN_FROZEN` once an interview exists. |
+| 6. Tests | 36 planning tests in `backend/tests/planning/`, using fixtures, a fake LLM, `httpx.MockTransport` and a tiny local bag-of-words embedding model. No network calls. |
 
 ## Tests and actual results (2026-11-06)
 
-`.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider` → **51 passed** (16 foundation + 35 planning).
+`.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider` → **52 passed** (16 foundation + 36 planning).
 
 The tests cover:
 - readable PDF and DOCX, empty or scanned PDF, corrupt files, page/size/type limits, the hash cache, LlamaParse gating and a mocked fallback, upload through `POST /api/cases`
 - library metadata and separation, rejection of invalid records, an idempotent rebuild with upsert and retirement, review-status and skill filters, bounded context, labelled retrieval, a missing embedding model
-- a valid plan that round-trips through the contract, required-skill coverage (CV without SQL still gets a SQL question even when the model misses SQL), prompt injection in a CV, missing knowledge with search unavailable, no personal information in search queries plus the 2-search cap and caching, Tavily used only when enabled, frozen plans, visible provider failure, tailoring fallback, vector index unavailable, unreviewed library unused by default, and the workflow saving a plan
+- a valid plan that round-trips through the contract, required-skill coverage (CV without SQL still gets a SQL question even when the model misses SQL), prompt injection in a CV, missing knowledge with search unavailable, no personal information in search queries plus the 2-search cap and caching, Tavily used only when enabled, frozen plans, visible provider failure, tailoring fallback, no tailoring call when the CV has no verified claims, vector index unavailable, unreviewed library unused by default, and the workflow saving a plan
 
 The PDF tests need `pypdf` (see integration request 1). Without it they are skipped, not failed.
 
@@ -43,7 +43,14 @@ The PDF tests need `pypdf` (see integration request 1). Without it they are skip
 
 Caveat: retrieval is filtered to one skill, so each query ranks only about 4 records. This is an easy benchmark and not evidence of production quality. The labels were written by this module and still need a second teammate's review.
 
-**Hosted smoke tests: not run.** No `GROQ_API_KEY`, `GROQ_MODEL` or Groq budget is configured on this machine. Each plan uses 2 Groq requests; please run at most 3 requests in total, as described below.
+**Hosted smoke tests (2026-11-06): 3 Groq requests used of the 6-request local budget.** Each run was `build_plan` called directly on `cv-03-missing-sql.txt` + `jd-integration-engineer.txt`, with `PLANNING_ALLOW_PENDING_REVIEW=true`.
+
+| Run | Model | Requests | Result |
+| --- | --- | --- | --- |
+| 1 | `llama-3.3-70b-versatile` | 1 | `PROVIDER_ERROR`. The model is listed in Groq's docs but is not available to this Groq account (checked with the free `GET /openai/v1/models`). Chat models the account can use: `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b` (preview). |
+| 2 | `openai/gpt-oss-120b` | 2 | **Extraction succeeded** (about 15 s). The plan had 5 questions in JD priority order (REST, SQL, messaging, auth, troubleshooting), with no CV evidence for SQL. `missing_information` included "CV does not state experience with SQL…" plus the model's own notes. Every CV/JD/knowledge excerpt matched its source, and rubrics came from the library. **Tailoring returned `PROVIDER_ERROR`**, so the approved questions were used unchanged and a warning was added, as designed. |
+
+Probable cause of the tailoring failure (not confirmed, because the shared adapter hides the provider's error body): `gpt-oss-120b` is a reasoning model, and with the adapter's `max_completion_tokens=1024`, reasoning plus five reworded questions likely exceeded the cap. A hint is that the tokens record for that call holds the reserved upper bound, which happens when usage isn't returned. Module-side mitigation, made after run 2: only questions with a verified CV claim are sent for tailoring, with one claim each and a request for under 45 words; if no question has a claim, no tailoring call is made. **This mitigation has not been re-tested live**, to stay within the 3-call smoke budget. See integration request 7 for the proper fix.
 
 ## Environment variables (names only)
 
@@ -74,7 +81,7 @@ $env:PYTHONPATH = "backend"
 .\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 ```
 
-Hosted smoke test (2 Groq requests), after Groq is configured, with `PLANNING_ALLOW_PENDING_REVIEW=true` until the review is done:
+Hosted smoke test (up to 2 Groq requests), after Groq is configured with a model your account can use (check `GET https://api.groq.com/openai/v1/models`; `openai/gpt-oss-120b` was used above) and with `PLANNING_ALLOW_PENDING_REVIEW=true` until the review is done:
 1. Start the backend using the command in the README.
 2. Create a case: `POST /api/cases` with `data/synthetic/planning/cv-03-missing-sql.txt` and `jd-integration-engineer.txt`.
 3. Request the plan: `POST /api/cases/{id}/plan`. This needs integration request 3.
@@ -95,7 +102,7 @@ Hosted smoke test (2 Groq requests), after Groq is configured, with `PLANNING_AL
 
 - **Nothing is human-reviewed yet.** By default (`PLANNING_ALLOW_PENDING_REVIEW` off), plans use the generic rubric and list the gaps. To use the library, review it, set `review_status` to `approved` per record, and rebuild.
 - The library covers the Integration Engineer role only. Other roles get a warning.
-- There is no Groq output yet, so extraction and tailoring quality is unmeasured. If the provider fails during extraction, an error is raised (no plan is fabricated). If it fails during tailoring, the approved questions are used unchanged and a warning is added.
+- Live Groq output has been checked on one case only (see the hosted smoke tests); quality across cases is unmeasured. Live tailoring has not yet succeeded with `gpt-oss-120b` under the 1024-token cap. If the provider fails during extraction, an error is raised (no plan is fabricated). If it fails during tailoring, the approved questions are used unchanged and a warning is added.
 - LlamaParse and Keenable/Tavily were implemented from the official docs but tested only with mocks. No live calls were made.
 - The prompt-injection defence is layered (tags, the system rule, catalogue/word-for-word checks, rubrics written in code, filtering of reworded questions), but it isn't a guarantee. Reworded questions are model text.
 - Locators are line numbers in the stored `cv_text`/`job_description`. PDF page numbers are not kept.
@@ -109,6 +116,7 @@ Hosted smoke test (2 Groq requests), after Groq is configured, with `PLANNING_AL
 4. **Jayanth:** optionally, have `repository.save_plan` refuse to overwrite a plan once a session or interview exists. `build_plan` already refuses once an interview exists, but the repository can't look up sessions by case.
 5. **Gana and Drashti:** `Question.skill` holds the readable skill name (e.g. "SQL and database integration"). `question_id`s are stable library IDs (`ie-sql-02`) or `generic-<skill>-<n>`. Knowledge evidence uses `source_id` = `chunk_id`, and `locator` = `"<title>, <section> <url>"`.
 6. **Reviewer (any teammate):** go through the checklist below and record your name and the date here. Then change `review_status` from `pending_review` to `approved` (or `rejected`) in the JSON files, and run the rebuild.
+7. **Jayanth (`services/llm.py`):** for reasoning models such as `openai/gpt-oss-*`, raise `max_completion_tokens` above 1024, or send a low reasoning effort following Groq's documentation, and consider including the provider's error code in `PROVIDER_ERROR` details (without prompts or secrets). Assessment and reporting are likely to hit the same cap. Also confirm the team's `GROQ_MODEL`: `llama-3.3-70b-versatile` is not available on Priya's account.
 
 ## Source review checklist
 
@@ -155,7 +163,7 @@ Reviewer: ____________ Date: ____________. For each item, open the source, confi
 | [ ] | `ref-tracecontext--distributed-tracing` | integration_troubleshooting | [W3C Recommendation: Trace Context](https://www.w3.org/TR/trace-context/), 1. Overview |
 | [ ] | `ref-tracecontext--traceparent` | integration_troubleshooting | [W3C Recommendation: Trace Context](https://www.w3.org/TR/trace-context/), 2. Trace Context HTTP Headers |
 
-#### Question/rubric records (check question fit, rubric anchors 0�3, expected topics and linked references)
+#### Question/rubric records (check question fit, rubric anchors 0–3, expected topics and linked references)
 
 | Reviewed | question_id | skill | seniority | question |
 |---|---|---|---|---|
@@ -178,4 +186,4 @@ Reviewer: ____________ Date: ____________. For each item, open the source, confi
 | [ ] | `ie-trbl-01` | integration_troubleshooting | mid | A request fails somewhere across three services. How do you find where it failed? |
 | [ ] | `ie-trbl-02` | integration_troubleshooting | mid | A partner API starts returning 503 errors intermittently. How do you investigate and protect your integration? |
 | [ ] | `ie-trbl-03` | integration_troubleshooting | mid | What do you log in an integration to make troubleshooting possible, and what must never be logged? |
-| [ ] | `generic-rubric` | fallback | � | Generic 0�3 evidence rubric, used only when no reviewed record exists |
+| [ ] | `generic-rubric` | fallback | – | Generic 0–3 evidence rubric, used only when no reviewed record exists |

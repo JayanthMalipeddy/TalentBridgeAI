@@ -199,15 +199,18 @@ async def plan_case(case: CaseInput, ctx: AgentContext, *, config: PlanningConfi
         qid = record.question_id if record else f"generic-{skill}-{n}"
         base = record.question if record else _generic_question(library.skill(skill).name)
         items.append({"question_id": qid, "skill": library.skill(skill).name, "approved_question": base,
-                      "verified_cv_claims": [r.excerpt for r in cv_refs.get(skill, [])[:2]]})
+                      "verified_cv_claims": [r.excerpt for r in cv_refs.get(skill, [])[:1]]})
     tailored: dict[str, str] = {}
-    if any(item["verified_cv_claims"] for item in items):
+    # Only questions with a verified CV claim are sent, keeping the response small enough
+    # for the shared adapter's 1024-token completion cap (reasoning models included).
+    to_tailor = [item for item in items if item["verified_cv_claims"]]
+    if to_tailor:
         try:
-            result = await ctx.llm.generate_structured("planning.tailor", TAILOR_SYSTEM, {"items": items}, Tailoring)
-            valid_ids = {item["question_id"] for item in items}
+            result = await ctx.llm.generate_structured("planning.tailor", TAILOR_SYSTEM, {"items": to_tailor}, Tailoring)
+            valid_ids = {item["question_id"] for item in to_tailor}
             for q in result.questions:
                 text = q.question.strip()
-                if q.question_id in valid_ids and 15 <= len(text) <= 600 and not suspicious_instructions(text):
+                if q.question_id in valid_ids and 15 <= len(text) <= 450 and not suspicious_instructions(text):
                     tailored[q.question_id] = text
         except AppError as exc:
             warnings.append(f"Question tailoring unavailable ({exc.code}); approved questions used unchanged.")

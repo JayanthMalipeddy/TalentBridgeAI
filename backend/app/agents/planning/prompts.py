@@ -6,7 +6,7 @@ come from the reviewed knowledge library in code.
 """
 from pydantic import BaseModel, ConfigDict, Field
 
-PROMPT_VERSION = "planning-v1"
+PROMPT_VERSION = "planning-v2"
 
 
 class _Out(BaseModel):
@@ -60,7 +60,8 @@ TAILOR_SYSTEM = (
     "You adapt approved interview questions for one candidate. " + UNTRUSTED_RULE + "\n"
     "For each item keep the same question_id and the same skill focus. If verified_cv_claims are given, you may "
     "refer to that stated experience (for example 'You mention ... ;'). Never assert experience that is not in "
-    "verified_cv_claims, never include a model answer or hint, and keep each question under 70 words, one question only."
+    "verified_cv_claims, never include a model answer or hint, and keep each question under 45 words, one question only. "
+    "Return only the JSON object, with no commentary."
 )
 
 
