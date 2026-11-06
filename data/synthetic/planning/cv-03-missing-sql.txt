@@ -1,0 +1,15 @@
+Priyanka Shah (fictional candidate)
+priyanka.shah@example.com | +91 98765 43210
+
+Summary
+Backend developer focused on HTTP services and messaging.
+
+Experience
+Backend Developer, Orbit Travel (2020-2025)
+- Built REST endpoints in Node.js for booking search and returned 409 Conflict for duplicate bookings.
+- Consumed partner APIs secured with OAuth 2.0 bearer tokens over TLS.
+- Built AWS SQS consumers that handle duplicate messages idempotently and move failures to a dead-letter queue.
+- Investigated failed partner calls using structured logs and request IDs.
+
+Skills
+Node.js, TypeScript, AWS SQS, OAuth 2.0, Docker

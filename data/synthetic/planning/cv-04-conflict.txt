@@ -1,0 +1,17 @@
+Tomasz Nowak (fictional candidate)
+tomasz.nowak@example.com
+
+Summary
+Senior integration architect with 10 years of experience leading enterprise integration programmes.
+
+Experience
+Junior Integration Developer, Delta Freight (2023-2025)
+- Maintained SQL Server stored procedures for shipment imports.
+- Added retry logic to a nightly file transfer job.
+- Assisted senior engineers with REST API testing in Postman.
+
+Internship, Delta Freight (2022-2023)
+- Wrote documentation for partner onboarding.
+
+Skills
+SQL Server, REST, Postman, Kafka (self-study)

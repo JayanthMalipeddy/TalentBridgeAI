@@ -1,0 +1,31 @@
+{
+  "document_id": "ref-rfc6749",
+  "title": "RFC 6749: The OAuth 2.0 Authorization Framework",
+  "source_url": "https://www.rfc-editor.org/rfc/rfc6749",
+  "chunks": [
+    {
+      "document_id": "ref-rfc6749",
+      "chunk_id": "ref-rfc6749--client-credentials",
+      "title": "RFC 6749: The OAuth 2.0 Authorization Framework",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6749",
+      "section": "Section 1.3.4",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The client credentials (or other forms of client authentication) can be used as an authorization grant when the authorization scope is limited to the protected resources under the control of the client, or to protected resources previously arranged with the authorization server."
+    },
+    {
+      "document_id": "ref-rfc6749",
+      "chunk_id": "ref-rfc6749--access-token",
+      "title": "RFC 6749: The OAuth 2.0 Authorization Framework",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6749",
+      "section": "Section 1.4",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Access tokens are credentials used to access protected resources. An access token is a string representing an authorization issued to the client."
+    }
+  ]
+}

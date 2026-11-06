@@ -1,0 +1,173 @@
+{
+  "measured_at": "2026-11-06T13:20:04+00:00",
+  "knowledge_version": "kb-1f0766cf6dbf",
+  "embedding_model": "bge-small-en-v1.5",
+  "k": 3,
+  "queries": 12,
+  "hit_rate_at_k": 1.0,
+  "mean_recall_at_k": 0.958,
+  "mrr": 0.944,
+  "note": "Retrieval is filtered by skill, so this measures ranking within a skill. Labels authored by Priya's module; second-teammate review pending.",
+  "per_query": [
+    {
+      "query_id": "rq-01",
+      "skill": "sql_database",
+      "retrieved": [
+        "ie-sql-01",
+        "ie-sql-04",
+        "ie-sql-02"
+      ],
+      "relevant": [
+        "ie-sql-02",
+        "ie-sql-03"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-02",
+      "skill": "sql_database",
+      "retrieved": [
+        "ie-sql-01",
+        "ie-sql-02",
+        "ie-sql-04"
+      ],
+      "relevant": [
+        "ie-sql-01"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-03",
+      "skill": "messaging_idempotency",
+      "retrieved": [
+        "ie-msg-03",
+        "ie-msg-01",
+        "ie-msg-04"
+      ],
+      "relevant": [
+        "ie-msg-01",
+        "ie-msg-03"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-04",
+      "skill": "messaging_idempotency",
+      "retrieved": [
+        "ie-msg-04",
+        "ie-msg-01",
+        "ie-msg-02"
+      ],
+      "relevant": [
+        "ie-msg-04"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-05",
+      "skill": "messaging_idempotency",
+      "retrieved": [
+        "ie-msg-02",
+        "ie-msg-03",
+        "ie-msg-04"
+      ],
+      "relevant": [
+        "ie-msg-02"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-06",
+      "skill": "rest_http",
+      "retrieved": [
+        "ie-rest-03",
+        "ie-rest-01",
+        "ie-rest-02"
+      ],
+      "relevant": [
+        "ie-rest-03"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-07",
+      "skill": "rest_http",
+      "retrieved": [
+        "ie-rest-02",
+        "ie-rest-03",
+        "ie-rest-04"
+      ],
+      "relevant": [
+        "ie-rest-02"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-08",
+      "skill": "rest_http",
+      "retrieved": [
+        "ie-rest-04",
+        "ie-rest-03",
+        "ie-rest-02"
+      ],
+      "relevant": [
+        "ie-rest-04"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-09",
+      "skill": "api_auth_security",
+      "retrieved": [
+        "ie-auth-02",
+        "ie-auth-03",
+        "ie-auth-04"
+      ],
+      "relevant": [
+        "ie-auth-02",
+        "ie-auth-03"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-10",
+      "skill": "api_auth_security",
+      "retrieved": [
+        "ie-auth-01",
+        "ie-auth-04",
+        "ie-auth-03"
+      ],
+      "relevant": [
+        "ie-auth-01"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-11",
+      "skill": "integration_troubleshooting",
+      "retrieved": [
+        "ie-trbl-03",
+        "ie-trbl-01",
+        "ie-trbl-02"
+      ],
+      "relevant": [
+        "ie-trbl-01",
+        "ie-trbl-03"
+      ],
+      "hit": true
+    },
+    {
+      "query_id": "rq-12",
+      "skill": "integration_troubleshooting",
+      "retrieved": [
+        "ie-trbl-02",
+        "ie-trbl-01",
+        "ie-trbl-03"
+      ],
+      "relevant": [
+        "ie-trbl-02"
+      ],
+      "hit": true
+    }
+  ]
+}

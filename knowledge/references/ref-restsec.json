@@ -1,0 +1,31 @@
+{
+  "document_id": "ref-restsec",
+  "title": "OWASP REST Security Cheat Sheet",
+  "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html",
+  "chunks": [
+    {
+      "document_id": "ref-restsec",
+      "chunk_id": "ref-restsec--https-only",
+      "title": "OWASP REST Security Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html",
+      "section": "HTTPS",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Secure REST services must only provide HTTPS endpoints. This protects authentication credentials in transit, for example passwords, API keys or JSON Web Tokens."
+    },
+    {
+      "document_id": "ref-restsec",
+      "chunk_id": "ref-restsec--no-secrets-in-url",
+      "title": "OWASP REST Security Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html",
+      "section": "Sensitive information in HTTP requests",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Passwords, security tokens, and API keys should not appear in the URL, as this can be captured in web server logs, which makes them intrinsically valuable."
+    }
+  ]
+}

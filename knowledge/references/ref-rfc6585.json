@@ -1,0 +1,19 @@
+{
+  "document_id": "ref-rfc6585",
+  "title": "RFC 6585: Additional HTTP Status Codes",
+  "source_url": "https://www.rfc-editor.org/rfc/rfc6585",
+  "chunks": [
+    {
+      "document_id": "ref-rfc6585",
+      "chunk_id": "ref-rfc6585--429-too-many-requests",
+      "title": "RFC 6585: Additional HTTP Status Codes",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc6585",
+      "section": "Section 4",
+      "skill": "rest_http",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The 429 status code indicates that the user has sent too many requests in a given amount of time (\"rate limiting\")."
+    }
+  ]
+}

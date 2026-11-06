@@ -1,0 +1,55 @@
+{
+  "document_id": "ref-sqli",
+  "title": "OWASP SQL Injection Prevention Cheat Sheet",
+  "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+  "chunks": [
+    {
+      "document_id": "ref-sqli",
+      "chunk_id": "ref-sqli--definition",
+      "title": "OWASP SQL Injection Prevention Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "section": "Introduction",
+      "skill": "sql_database",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "SQL injection occurs when untrusted data becomes part of a query's SQL syntax."
+    },
+    {
+      "document_id": "ref-sqli",
+      "chunk_id": "ref-sqli--prepared-statements",
+      "title": "OWASP SQL Injection Prevention Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "section": "Defense Option 1: Prepared Statements (with Parameterized Queries)",
+      "skill": "sql_database",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Define the SQL structure separately from its data values, then bind those values through the database API."
+    },
+    {
+      "document_id": "ref-sqli",
+      "chunk_id": "ref-sqli--no-concatenation",
+      "title": "OWASP SQL Injection Prevention Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "section": "Defense Option 1: Prepared Statements (with Parameterized Queries)",
+      "skill": "sql_database",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Concatenating untrusted values into the query before preparing it defeats this protection."
+    },
+    {
+      "document_id": "ref-sqli",
+      "chunk_id": "ref-sqli--least-privilege",
+      "title": "OWASP SQL Injection Prevention Cheat Sheet",
+      "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "section": "Least Privilege",
+      "skill": "sql_database",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "To minimize the potential damage of a successful SQL injection attack, you should minimize the privileges assigned to every database account in your environment."
+    }
+  ]
+}

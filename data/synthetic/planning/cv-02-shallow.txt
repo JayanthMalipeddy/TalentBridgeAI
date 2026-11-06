@@ -1,0 +1,15 @@
+Daniel Reyes (fictional candidate)
+daniel.reyes@example.com
+
+Profile
+Passionate, results-driven technologist and fast learner. Team player with strong communication skills.
+
+Experience
+Software Developer, Acme Retail (2022-2025)
+- Worked on APIs.
+- Helped with database tasks.
+- Involved in integrations with various systems.
+- Supported production issues when needed.
+
+Skills
+APIs, databases, cloud, agile, problem solving

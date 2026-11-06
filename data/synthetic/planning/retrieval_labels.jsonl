@@ -1,0 +1,12 @@
+{"query_id": "rq-01", "skill": "sql_database", "query": "Strong SQL: write queries against PostgreSQL, design upserts and reason about transactions.", "relevant_chunk_ids": ["ie-sql-02", "ie-sql-03"]}
+{"query_id": "rq-02", "skill": "sql_database", "query": "protect integration code from SQL injection with parameterised queries", "relevant_chunk_ids": ["ie-sql-01"]}
+{"query_id": "rq-03", "skill": "messaging_idempotency", "query": "Message queues (RabbitMQ or AWS SQS): retries, idempotent consumers and dead-letter queues.", "relevant_chunk_ids": ["ie-msg-01", "ie-msg-03"]}
+{"query_id": "rq-04", "skill": "messaging_idempotency", "query": "Implemented idempotency keys for payment creation so client retries never charged twice.", "relevant_chunk_ids": ["ie-msg-04"]}
+{"query_id": "rq-05", "skill": "messaging_idempotency", "query": "retry a downstream call that timed out with exponential backoff", "relevant_chunk_ids": ["ie-msg-02"]}
+{"query_id": "rq-06", "skill": "rest_http", "query": "handling partner rate limits (HTTP 429) and outages", "relevant_chunk_ids": ["ie-rest-03"]}
+{"query_id": "rq-07", "skill": "rest_http", "query": "returned 409 Conflict for duplicate bookings; correct use of status codes", "relevant_chunk_ids": ["ie-rest-02"]}
+{"query_id": "rq-08", "skill": "rest_http", "query": "machine-readable error responses for API clients", "relevant_chunk_ids": ["ie-rest-04"]}
+{"query_id": "rq-09", "skill": "api_auth_security", "query": "Secure API handling: OAuth 2.0 client credentials, API keys and TLS.", "relevant_chunk_ids": ["ie-auth-02", "ie-auth-03"]}
+{"query_id": "rq-10", "skill": "api_auth_security", "query": "difference between unauthorized and forbidden responses", "relevant_chunk_ids": ["ie-auth-01"]}
+{"query_id": "rq-11", "skill": "integration_troubleshooting", "query": "Troubleshooting production integrations using logs, correlation IDs and tracing.", "relevant_chunk_ids": ["ie-trbl-01", "ie-trbl-03"]}
+{"query_id": "rq-12", "skill": "integration_troubleshooting", "query": "partner API intermittently returns 503 service unavailable", "relevant_chunk_ids": ["ie-trbl-02"]}

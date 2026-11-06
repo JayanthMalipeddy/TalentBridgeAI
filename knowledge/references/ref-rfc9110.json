@@ -1,0 +1,91 @@
+{
+  "document_id": "ref-rfc9110",
+  "title": "RFC 9110: HTTP Semantics",
+  "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+  "chunks": [
+    {
+      "document_id": "ref-rfc9110",
+      "chunk_id": "ref-rfc9110--idempotent-methods",
+      "title": "RFC 9110: HTTP Semantics",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "section": "Section 9.2.2",
+      "skill": "rest_http",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "A request method is considered \"idempotent\" if the intended effect on the server of multiple identical requests with that method is the same as the effect for a single such request. Of the request methods defined by this specification, PUT, DELETE, and safe request methods are idempotent."
+    },
+    {
+      "document_id": "ref-rfc9110",
+      "chunk_id": "ref-rfc9110--safe-methods",
+      "title": "RFC 9110: HTTP Semantics",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "section": "Section 9.2.1",
+      "skill": "rest_http",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Request methods are considered \"safe\" if their defined semantics are essentially read-only; i.e., the client does not request, and does not expect, any state change on the origin server as a result of applying a safe method to a target resource."
+    },
+    {
+      "document_id": "ref-rfc9110",
+      "chunk_id": "ref-rfc9110--409-conflict",
+      "title": "RFC 9110: HTTP Semantics",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "section": "Section 15.5.10",
+      "skill": "rest_http",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The 409 (Conflict) status code indicates that the request could not be completed due to a conflict with the current state of the target resource. This code is used in situations where the user might be able to resolve the conflict and resubmit the request."
+    },
+    {
+      "document_id": "ref-rfc9110",
+      "chunk_id": "ref-rfc9110--retry-after",
+      "title": "RFC 9110: HTTP Semantics",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "section": "Section 10.2.3",
+      "skill": "rest_http",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Servers send the \"Retry-After\" header field to indicate how long the user agent ought to wait before making a follow-up request."
+    },
+    {
+      "document_id": "ref-rfc9110",
+      "chunk_id": "ref-rfc9110--401-unauthorized",
+      "title": "RFC 9110: HTTP Semantics",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "section": "Section 15.5.2",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The 401 (Unauthorized) status code indicates that the request has not been applied because it lacks valid authentication credentials for the target resource."
+    },
+    {
+      "document_id": "ref-rfc9110",
+      "chunk_id": "ref-rfc9110--403-forbidden",
+      "title": "RFC 9110: HTTP Semantics",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "section": "Section 15.5.4",
+      "skill": "api_auth_security",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The 403 (Forbidden) status code indicates that the server understood the request but refuses to fulfill it."
+    },
+    {
+      "document_id": "ref-rfc9110",
+      "chunk_id": "ref-rfc9110--503-unavailable",
+      "title": "RFC 9110: HTTP Semantics",
+      "source_url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "section": "Section 15.6.4",
+      "skill": "integration_troubleshooting",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "The 503 (Service Unavailable) status code indicates that the server is currently unable to handle the request due to a temporary overload or scheduled maintenance, which will likely be alleviated after some delay."
+    }
+  ]
+}

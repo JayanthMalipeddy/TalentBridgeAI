@@ -1,0 +1,31 @@
+{
+  "role": "integration_engineer",
+  "version": "1",
+  "skills": [
+    {
+      "skill": "rest_http",
+      "name": "REST APIs and HTTP",
+      "aliases": ["rest", "restful", "http", "api design", "web api", "web services", "status code", "openapi", "swagger", "json api", "endpoint"]
+    },
+    {
+      "skill": "api_auth_security",
+      "name": "Authentication and secure API handling",
+      "aliases": ["oauth", "oauth2", "oauth 2.0", "authentication", "authorization", "jwt", "bearer token", "api key", "tls", "https", "mtls", "secure api", "secrets management", "owasp"]
+    },
+    {
+      "skill": "sql_database",
+      "name": "SQL and database integration",
+      "aliases": ["sql", "postgresql", "postgres", "mysql", "sql server", "t-sql", "oracle", "database", "relational", "transactions", "stored procedure", "etl"]
+    },
+    {
+      "skill": "messaging_idempotency",
+      "name": "Messaging, retries and idempotency",
+      "aliases": ["messaging", "message queue", "queue", "kafka", "rabbitmq", "sqs", "service bus", "event-driven", "pub/sub", "retry", "retries", "idempotency", "idempotent", "dead-letter", "backoff", "webhook"]
+    },
+    {
+      "skill": "integration_troubleshooting",
+      "name": "Integration troubleshooting",
+      "aliases": ["troubleshooting", "debugging", "incident", "logging", "monitoring", "observability", "tracing", "correlation id", "root cause", "on-call", "production support"]
+    }
+  ]
+}

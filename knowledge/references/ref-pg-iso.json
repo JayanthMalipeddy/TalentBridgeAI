@@ -1,0 +1,31 @@
+{
+  "document_id": "ref-pg-iso",
+  "title": "PostgreSQL Documentation: Transaction Isolation",
+  "source_url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+  "chunks": [
+    {
+      "document_id": "ref-pg-iso",
+      "chunk_id": "ref-pg-iso--read-committed",
+      "title": "PostgreSQL Documentation: Transaction Isolation",
+      "source_url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "section": "13.2.1 Read Committed Isolation Level",
+      "skill": "sql_database",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "Read Committed is the default isolation level in PostgreSQL. When a transaction uses this isolation level, a SELECT query (without a FOR UPDATE/SHARE clause) sees only data committed before the query began; it never sees either uncommitted data or changes committed by concurrent transactions during the query's execution."
+    },
+    {
+      "document_id": "ref-pg-iso",
+      "chunk_id": "ref-pg-iso--dirty-read",
+      "title": "PostgreSQL Documentation: Transaction Isolation",
+      "source_url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "section": "13.2 Transaction Isolation (dirty read)",
+      "skill": "sql_database",
+      "version": "1",
+      "review_status": "pending_review",
+      "retrieved_at": "2026-11-06",
+      "excerpt": "A transaction reads data written by a concurrent uncommitted transaction."
+    }
+  ]
+}
