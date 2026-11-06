@@ -261,6 +261,8 @@ export function Workspace() {
             <h1>
               {page === "new"
                 ? "A better conversation starts here."
+                : page === "status"
+                  ? "Services and usage"
                 : page === "reports"
                   ? "Your reports"
                   : page === "overview"
