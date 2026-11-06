@@ -142,7 +142,7 @@ async def text_answer(id, turn_id, request_id, text, ctx):
         q = s["frozen_plan"]["questions"][s["question_index"]]
         add_turn(s, "candidate", text, q["question_id"])
         s["requests"][request_id] = digest
-        if s["follow_up"]: advance(s)
+        if s["follow_up"] or not ctx.settings.interview_followups_enabled: advance(s)
         else:
             claimed = True
             s["state"] = "processing"

@@ -2,7 +2,7 @@ import hashlib
 import json
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from sqlalchemy import select
+from sqlalchemy import select, delete, func
 from sqlalchemy.dialects.sqlite import insert
 from .db import records, usage
 from .contracts import CaseInput, InterviewPlan, InterviewResult, Assessment, Report
@@ -38,18 +38,26 @@ class Repository:
         with self.engine.connect() as conn:
             return self._get(conn, kind, id)
 
-    def save_case(self, case: CaseInput):
+    def save_case(self, case: CaseInput, workspace_id=None, max_cases=None):
         with self.transaction() as conn:
+            if workspace_id is not None and max_cases is not None:
+                owners = conn.execute(select(records.c.payload).where(records.c.kind == "case_owner")).scalars()
+                if sum(json.loads(raw)["workspace_id"] == workspace_id for raw in owners) >= max_cases:
+                    raise AppError("WORKSPACE_LIMIT", "Workspace case allowance exhausted", 429)
             conn.execute(insert(records).values(kind="case", id=case.case_id, payload=case.model_dump_json()))
+            self._put(conn, "case_owner", case.case_id, {"workspace_id": workspace_id})
             self._put(conn, "status", case.case_id, {"status": "created", "failure": None})
 
     def get_case(self, id):
         return CaseInput.model_validate(self.get("case", id))
 
-    def list_cases(self):
+    def list_cases(self, workspace_id=None):
         with self.engine.connect() as conn:
             rows = conn.execute(select(records.c.payload).where(records.c.kind == "case")).scalars()
-            return [{k: v for k, v in json.loads(row).items() if k not in {"cv_text", "job_description"}} for row in rows]
+            owners = {row.id: json.loads(row.payload)["workspace_id"] for row in conn.execute(select(records).where(records.c.kind == "case_owner"))}
+            statuses = {row.id: json.loads(row.payload).get("status", "created") for row in conn.execute(select(records).where(records.c.kind == "status"))}
+            return [dict({k: v for k, v in case.items() if k not in {"cv_text", "job_description"}}, status=statuses.get(case["case_id"], "created"))
+                    for case in map(json.loads, rows) if owners.get(case["case_id"]) == workspace_id]
 
     def set_status(self, id, status, failure=None):
         with self.transaction() as conn:
@@ -58,34 +66,38 @@ class Repository:
 
     def _save_artifact(self, kind, value):
         with self.transaction() as conn:
-            case = self._get(conn, "case", value.case_id)
-            if kind == "plan":
-                sessions = conn.execute(select(records.c.payload).where(records.c.kind == "session")).scalars()
-                for raw in sessions:
-                    session = json.loads(raw)
-                    if session["case_id"] == value.case_id and session.get("frozen_plan") != value.model_dump():
-                        raise AppError("PLAN_FROZEN", "An interview already uses this plan; create a new case for a revised plan", 409)
-            if kind == "assessment":
-                plan = self._get(conn, "plan", value.case_id)
-                if plan["plan_version"] != value.plan_version:
-                    raise AppError("VERSION_CONFLICT", "Assessment plan version is stale", 409)
-            if kind == "interview":
-                session = self._get(conn, "session", value.session_id)
-                if session["case_id"] != value.case_id or session["channel"] != value.channel:
-                    raise AppError("SESSION_MISMATCH", "Interview does not match its session", 409)
-            if kind == "report":
-                if value.mode != case["mode"]:
-                    raise AppError("MODE_MISMATCH", "Report mode does not match case", 409)
-                # Versions are immutable; approval can only happen through approve_report.
-                version_id = value.case_id + ":" + value.report_version
-                value = value.model_copy(update={"approval_status": "not_applicable" if value.mode == "mock" else "draft"})
-                exists = conn.execute(select(records.c.id).where(records.c.kind == "report_version", records.c.id == version_id)).first()
-                if exists:
-                    raise AppError("VERSION_CONFLICT", "Create a new report version", 409)
-                self._put(conn, "report_version", version_id, value.model_dump())
-                self._put(conn, "approval", value.case_id, {"report_version": None})
-            self._put(conn, kind, value.case_id, value.model_dump())
-            self._put(conn, "status", value.case_id, {"status": kind + "_ready", "failure": None})
+            self._save_artifact_in(conn, kind, value)
+
+    def _save_artifact_in(self, conn, kind, value):
+        case = self._get(conn, "case", value.case_id)
+        if kind == "plan":
+            sessions = conn.execute(select(records.c.payload).where(records.c.kind == "session")).scalars()
+            for raw in sessions:
+                session = json.loads(raw)
+                if session["case_id"] == value.case_id and session.get("frozen_plan") != value.model_dump():
+                    raise AppError("PLAN_FROZEN", "An interview already uses this plan; create a new case for a revised plan", 409)
+        if kind == "assessment":
+            plan = self._get(conn, "plan", value.case_id)
+            if plan["plan_version"] != value.plan_version:
+                raise AppError("VERSION_CONFLICT", "Assessment plan version is stale", 409)
+        if kind == "interview":
+            session = self._get(conn, "session", value.session_id)
+            if session["case_id"] != value.case_id or session["channel"] != value.channel:
+                raise AppError("SESSION_MISMATCH", "Interview does not match its session", 409)
+        if kind == "report":
+            if value.mode != case["mode"]:
+                raise AppError("MODE_MISMATCH", "Report mode does not match case", 409)
+            # Versions are immutable; approval can only happen through approve_report.
+            version_id = value.case_id + ":" + value.report_version
+            value = value.model_copy(update={"approval_status": "not_applicable" if value.mode == "mock" else "draft"})
+            exists = conn.execute(select(records.c.id).where(records.c.kind == "report_version", records.c.id == version_id)).first()
+            if exists:
+                raise AppError("VERSION_CONFLICT", "Create a new report version", 409)
+            self._put(conn, "report_version", version_id, value.model_dump())
+            self._put(conn, "approval", value.case_id, {"report_version": None})
+        self._put(conn, kind, value.case_id, value.model_dump())
+        self._put(conn, "status", value.case_id, {"status": kind + "_ready", "failure": None})
+
 
     def save_plan(self, value: InterviewPlan): self._save_artifact("plan", value)
     def get_plan(self, id): return InterviewPlan.model_validate(self.get("plan", id))
@@ -137,6 +149,11 @@ class Repository:
                     raise AppError("SESSION_MISMATCH", "Result does not match session", 409)
                 self._put(conn, "interview_session", id, result.model_dump())
                 self._put(conn, "interview", result.case_id, result.model_dump())
+                if not result.consent_confirmed or result.status == "declined":
+                    conn.execute(delete(records).where(records.c.id == result.case_id,
+                        records.c.kind.in_(["assessment", "report", "approval"])))
+                    conn.execute(delete(records).where(records.c.kind == "report_version",
+                        records.c.id.startswith(result.case_id + ":")))
                 if session.get("state") in {"completed", "incomplete", "declined"}:
                     event = {"case_id": result.case_id, "session_id": id, "plan_version": session["frozen_plan"]["plan_version"], "status": "pending", "event": "interview_completed"}
                     conn.execute(insert(records).values(kind="workflow_event", id=id, payload=json.dumps(event)).on_conflict_do_nothing())
@@ -173,3 +190,44 @@ class Repository:
     def usage_records(self):
         with self.engine.connect() as conn:
             return [dict(row._mapping) for row in conn.execute(select(usage))]
+
+    def create_guest(self, token_hash, session, limit):
+        with self.transaction() as conn:
+            count = conn.execute(select(func.count()).select_from(records).where(records.c.kind == "guest")).scalar_one()
+            if count >= limit:
+                raise AppError("WORKSPACE_LIMIT", "Demo workspace capacity reached; contact the project owner", 429)
+            self._put(conn, "guest", token_hash, session)
+
+    def require_case_owner(self, case_id, workspace_id):
+        with self.engine.connect() as conn:
+            self._get(conn, "case", case_id)
+            raw = conn.execute(select(records.c.payload).where(records.c.kind == "case_owner", records.c.id == case_id)).scalar_one_or_none()
+            actual = json.loads(raw)["workspace_id"] if raw else None
+            if actual != workspace_id:
+                raise AppError("NOT_FOUND", "case not found", 404)
+
+    def consume_workspace_operation(self, workspace_id, limit):
+        if workspace_id is None: return
+        with self.transaction() as conn:
+            raw = conn.execute(select(records.c.payload).where(records.c.kind == "guest_operations", records.c.id == workspace_id)).scalar_one_or_none()
+            count = json.loads(raw)["count"] if raw else 0
+            if count >= limit:
+                raise AppError("WORKSPACE_LIMIT", "Workspace processing allowance exhausted", 429)
+            self._put(conn, "guest_operations", workspace_id, {"count": count + 1})
+
+    def all_records(self, kind):
+        with self.engine.connect() as conn:
+            return [(row.id, json.loads(row.payload)) for row in conn.execute(select(records).where(records.c.kind == kind))]
+
+    def put(self, kind, id, value):
+        with self.transaction() as conn: self._put(conn, kind, id, value)
+
+    def save_stage_result(self, stage, value, receipt_id, fingerprint, expected_interview):
+        with self.transaction() as conn:
+            if expected_interview is not None:
+                current = self._get(conn, "interview", value.case_id)
+                if current != expected_interview or not current["consent_confirmed"]:
+                    raise AppError("INPUT_CHANGED", "Interview changed or consent was withdrawn during processing", 409)
+            kind = {"plan": "plan", "assess": "assessment", "report": "report"}[stage]
+            self._save_artifact_in(conn, kind, value)
+            self._put(conn, "stage_run", receipt_id, {"fingerprint": fingerprint, "status": "succeeded", "stage": stage})

@@ -983,3 +983,41 @@ blockquote {
     background: white;
   }
 }
+
+/* Locally hosted workplace photography; solid content panels preserve contrast. */
+@media screen {
+  .hero {
+    background: linear-gradient(100deg, #06271ff2, #073b2cd9 55%, #06271fa6), url('/images/meeting-room.jpg') center 58% / cover;
+  }
+  .welcome-right {
+    background: linear-gradient(180deg, #06271fd9, #073b2ce8), url('/images/workspace.jpg') center / cover;
+  }
+  .app-shell {
+    background: linear-gradient(135deg, #f3f8f5ed, #edf5f0f5), url('/images/workspace.jpg') center / cover fixed;
+  }
+  .app-main { align-self: flex-start; margin-top: 0; }
+  .app-header {
+    position: relative;
+    min-height: 230px;
+    padding: 36px;
+    border-radius: 22px;
+    overflow: hidden;
+    color: #fff;
+    background: linear-gradient(90deg, #06271ff5 0%, #073b2ce0 38%, #073b2c33 100%), url('/images/meeting-room.jpg') center 61% / cover;
+    box-shadow: 0 16px 40px #06271f14;
+    align-items: flex-end;
+  }
+  .app-header h1 { color: #fff; max-width: 600px; text-wrap: balance; }
+  .app-header .eyebrow { color: #d4eddd; }
+  .app-header > .tag { background: #ffffffeb; color: #073b2c; flex-shrink: 0; }
+  .panel { box-shadow: 0 8px 32px #06271f06; }
+  .panel pre { overflow-wrap: anywhere; }
+  @media (max-width: 700px) {
+    .app-header { padding: 28px 22px; min-height: 210px; background-position: center, 65% center; }
+    .app-header h1 { font-size: 28px; }
+    .app-shell { background-attachment: scroll; }
+  }
+}
+.phone-permission { display: flex !important; align-items: center; gap: 12px; }
+.phone-permission input { width: 18px; height: 18px; flex-shrink: 0; }
+.phone-interview > button { margin-top: 20px; }

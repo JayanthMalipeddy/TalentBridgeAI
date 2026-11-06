@@ -13,6 +13,7 @@ export async function request<T>(
   path: string,
   method = "GET",
   body?: unknown,
+  extraHeaders: Record<string,string> = {},
 ): Promise<T> {
   let response: Response;
   try {
@@ -20,6 +21,7 @@ export async function request<T>(
       method,
       credentials: "include",
       headers: {
+        ...extraHeaders,
         ...(body && !(body instanceof FormData)
           ? { "Content-Type": "application/json" }
           : {}),

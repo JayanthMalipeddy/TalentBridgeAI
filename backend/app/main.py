@@ -3,12 +3,13 @@ import asyncio
 import logging
 from typing import Literal
 from uuid import uuid4
-from fastapi import FastAPI, Depends, Request, Form, File, UploadFile
+from pathlib import Path
+from fastapi import FastAPI, Depends, Request, Response, Form, File, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from .settings import Settings
 from .contracts import CaseInput, InterviewPlan, Assessment, Report
 from .context import AgentContext
@@ -16,16 +17,24 @@ from .db import make_engine
 from .repository import Repository
 from .errors import AppError
 from .auth import recruiter
+from .guest import owner, owned_case, bootstrap, get_guest, metadata
 from .services.budget import BudgetService
 from .services.telemetry import Telemetry
 from .services.llm import LLMClient
 from .agents.interview.router import router
 from .agents.interview.service import create_session, expire_sessions, voice_available
 from .agents.planning.agent import parse_cv
-from .workflow import create_workflow, AGENTS_AVAILABLE
+from .agents.interview import phone
+from .workflow import create_workflow, AGENTS_AVAILABLE, process_completion_events
 
 class SessionRequest(BaseModel):
     channel: Literal["text", "elevenlabs"]
+
+class PhoneRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    phone_number: str = Field(pattern=r"^\+[1-9]\d{7,14}$")
+    contact_permission: bool
+    request_id: str = Field(min_length=8, max_length=100)
 
 class ApprovalRequest(BaseModel):
     report_version: str
@@ -45,16 +54,28 @@ def create_app(settings: Settings | None = None):
                 except Exception:
                     logging.getLogger("talentbridge.interview").error("session_expiry_failed")
                 await asyncio.sleep(5)
+        async def phone_worker():
+            while True:
+                try:
+                    await phone.refresh_calls(app.state.ctx)
+                    await process_completion_events(app.state.ctx, app.state.workflow, phone_only=not settings.workflow_auto_process)
+                except Exception:
+                    logging.getLogger("talentbridge.interview").error("completion_worker_failed")
+                await asyncio.sleep(15)
+        worker = asyncio.create_task(phone_worker())
         sweeper = asyncio.create_task(sweep())
         try:
             yield
         finally:
+            worker.cancel()
+            try: await worker
+            except asyncio.CancelledError: pass
             sweeper.cancel()
             try: await sweeper
             except asyncio.CancelledError: pass
             repo.engine.dispose()
     app = FastAPI(title="TalentBridge AI Foundation", version="1.0", lifespan=lifespan)
-    app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.frontend_origin.split(",")], allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
+    app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.frontend_origin.split(",")], allow_methods=["GET", "POST"], allow_credentials=True, allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Recruiter-Token"])
 
     @app.exception_handler(AppError)
     async def app_error(request, exc):
@@ -72,6 +93,16 @@ def create_app(settings: Settings | None = None):
     async def internal_error(request, exc):
         return await app_error(request, AppError("INTERNAL_ERROR", "Unexpected server error", 500))
 
+    @app.get("/api/session")
+    def guest_session(request: Request, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return metadata(get_guest(request))
+
+    @app.post("/api/guest-session")
+    def new_guest_session(request: Request, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return bootstrap(request, response)
+
     @app.get("/api/health")
     def health():
         return {"status": "ok", "schema_version": "1.0"}
@@ -86,14 +117,14 @@ def create_app(settings: Settings | None = None):
             "llamaparse": bool(settings.llama_cloud_api_key.get_secret_value()),
             "langfuse": bool(settings.langfuse_public_key and settings.langfuse_secret_key.get_secret_value()),
         }
-        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": {name: {"available": AGENTS_AVAILABLE.get(stage, False), "code": "AVAILABLE" if AGENTS_AVAILABLE.get(stage, False) else "NOT_IMPLEMENTED"} for name, stage in [("planning", "plan"), ("interview", "interview"), ("assessment", "assess"), ("reporting", "report")]}, "sessions": {"text": True, "elevenlabs": False}, "integrations": {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}}
-        agents = {name: {"available": False, "code": "NOT_IMPLEMENTED"} for name in ["planning", "assessment", "reporting"]}
+        agents = {name: {"available": AGENTS_AVAILABLE[stage], "code": "AVAILABLE" if AGENTS_AVAILABLE[stage] else "NOT_IMPLEMENTED"} for name, stage in [("planning", "plan"), ("assessment", "assess"), ("reporting", "report")]}
         agents["interview"] = {"available": True, "channels": ["text"] + (["elevenlabs"] if voice_available(settings) else [])}
         integrations = {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}
         integrations["elevenlabs"] = {"configured": configured["elevenlabs"], "available": voice_available(settings), "reason": "Supervised browser mode; provider configuration and minute quota checked at authorization"}
-        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": agents, "sessions": {"text": True, "elevenlabs": voice_available(settings)}, "integrations": integrations, "fixture_demo": settings.app_env == "fixture-demo"}
+        integrations["knowledge"] = {"configured": bool(settings.embedding_model), "available": Path(settings.embedding_model).is_dir() and (Path(settings.chroma_path) / "planning_index_manifest.json").is_file(), "provisional_criteria": settings.planning_allow_pending_review, "reason": "Only human-reviewed records may be used for scoring; provisional feedback withholds scores"}
+        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": agents, "sessions": {"text": True, "elevenlabs": voice_available(settings)}, "phone": phone.capability(settings), "integrations": integrations, "fixture_demo": settings.app_env == "fixture-demo"}
 
-    @app.post("/api/cases", dependencies=[Depends(recruiter)], response_model=CaseInput, status_code=201)
+    @app.post("/api/cases", dependencies=[Depends(owner)], response_model=CaseInput, status_code=201)
     async def new_case(request: Request, job_description: str = Form(min_length=1), mode: Literal["recruitment", "mock"] = Form(), role: str = Form(min_length=1), cv_text: str | None = Form(default=None), cv_file: UploadFile | None = File(default=None)):
         ctx = request.app.state.ctx
         if (cv_file is None) == (cv_text is None):
@@ -114,48 +145,85 @@ def create_app(settings: Settings | None = None):
         if len(cv_text.encode()) > settings.max_cv_bytes:
             raise AppError("CV_TOO_LARGE", "CV exceeds MAX_CV_BYTES", 413)
         case = CaseInput(case_id=str(uuid4()), mode=mode, role=role, cv_text=cv_text, job_description=job_description)
-        ctx.repository.save_case(case)
+        ctx.repository.save_case(case, owner(request), settings.guest_max_cases)
         return case
 
-    @app.get("/api/cases", dependencies=[Depends(recruiter)])
+    @app.get("/api/cases", dependencies=[Depends(owner)])
     def cases(request: Request):
-        return request.app.state.ctx.repository.list_cases()
+        return request.app.state.ctx.repository.list_cases(owner(request))
 
-    @app.get("/api/cases/{case_id}", dependencies=[Depends(recruiter)])
+    @app.get("/api/cases/{case_id}", dependencies=[Depends(owned_case)])
     def case(case_id: str, request: Request):
         repo = request.app.state.ctx.repository
         return {"case": repo.get_case(case_id), **repo.get("status", case_id)}
 
     async def run_stage(case_id, stage, request):
         request.app.state.ctx.repository.get_case(case_id)
-        state = await request.app.state.workflow.ainvoke({"case_id": case_id, "stage": stage, "result": {}})
+        request.app.state.ctx.repository.consume_workspace_operation(owner(request), settings.guest_max_operations)
+        state = await request.app.state.workflow.ainvoke({"case_id": case_id, "stage": stage, "result": {}, "retry": request.query_params.get("retry") == "true"})
         return state["result"]
 
-    @app.post("/api/cases/{case_id}/plan", dependencies=[Depends(recruiter)], response_model=InterviewPlan)
+    @app.post("/api/cases/{case_id}/plan", dependencies=[Depends(owned_case)], response_model=InterviewPlan)
     async def plan(case_id: str, request: Request):
         return await run_stage(case_id, "plan", request)
 
-    @app.post("/api/cases/{case_id}/sessions", dependencies=[Depends(recruiter)])
+    @app.post("/api/cases/{case_id}/sessions", dependencies=[Depends(owned_case)])
     async def sessions(case_id: str, body: SessionRequest, request: Request):
         ctx = request.app.state.ctx
         return await create_session(ctx.repository.get_case(case_id), ctx.repository.get_plan(case_id), body.channel, ctx)
 
-    @app.post("/api/cases/{case_id}/assess", dependencies=[Depends(recruiter)], response_model=Assessment)
+    @app.get("/api/cases/{case_id}/contact", dependencies=[Depends(owned_case)])
+    def contact(case_id: str, request: Request):
+        return {"suggested_numbers": phone.contact_numbers(request.app.state.ctx.repository.get_case(case_id).cv_text)}
+
+    @app.post("/api/cases/{case_id}/phone-call", dependencies=[Depends(owned_case)])
+    async def call_candidate(case_id: str, body: PhoneRequest, request: Request):
+        # Workspace ownership plus operator authorization; guest access alone cannot spend on calls.
+        recruiter(request, "Bearer " + request.headers.get("x-recruiter-token", ""))
+        return await phone.start_call(case_id, body.phone_number, body.contact_permission, body.request_id, request.app.state.ctx)
+
+    @app.get("/api/cases/{case_id}/phone-call", dependencies=[Depends(owned_case)])
+    def call_status(case_id: str, request: Request):
+        ctx = request.app.state.ctx
+        matches = [s for s in ctx.repository.list_sessions() if s["case_id"] == case_id and s.get("transport") == "phone"]
+        if not matches: raise AppError("NOT_FOUND", "No phone interview started", 404)
+        return phone.public_call(matches[0], ctx)
+
+    @app.post("/api/cases/{case_id}/assess", dependencies=[Depends(owned_case)], response_model=Assessment)
     async def assess(case_id: str, request: Request):
         return await run_stage(case_id, "assess", request)
 
-    @app.post("/api/cases/{case_id}/report", dependencies=[Depends(recruiter)], response_model=Report)
+    @app.post("/api/cases/{case_id}/report", dependencies=[Depends(owned_case)], response_model=Report)
     async def report(case_id: str, request: Request):
         return await run_stage(case_id, "report", request)
 
-    @app.get("/api/cases/{case_id}/report", dependencies=[Depends(recruiter)], response_model=Report)
+    @app.get("/api/cases/{case_id}/report", dependencies=[Depends(owned_case)], response_model=Report)
     def read_report(case_id: str, request: Request):
         repo = request.app.state.ctx.repository
-        if repo.get_case(case_id).mode == "mock":
+        if repo.get_case(case_id).mode == "mock" and owner(request) is None:
             raise AppError("FORBIDDEN", "Mock reports are accessible only to their owning session", 403)
         return repo.get_report(case_id)
 
-    @app.post("/api/cases/{case_id}/approve", dependencies=[Depends(recruiter)], response_model=Report)
+    @app.get("/api/cases/{case_id}/plan", dependencies=[Depends(owned_case)], response_model=InterviewPlan)
+    def read_plan(case_id: str, request: Request):
+        return request.app.state.ctx.repository.get_plan(case_id)
+
+    @app.get("/api/cases/{case_id}/assessment", dependencies=[Depends(owned_case)], response_model=Assessment)
+    def read_assessment(case_id: str, request: Request):
+        repo = request.app.state.ctx.repository
+        if repo.get_case(case_id).mode == "mock" and owner(request) is None:
+            raise AppError("FORBIDDEN", "Mock assessments are private to their owner", 403)
+        return repo.get_assessment(case_id)
+
+    @app.get("/api/cases/{case_id}/interview", dependencies=[Depends(owned_case)])
+    def read_interview(case_id: str, request: Request):
+        repo = request.app.state.ctx.repository
+        if repo.get_case(case_id).mode == "mock" and owner(request) is None:
+            raise AppError("FORBIDDEN", "Mock results are private to their owner", 403)
+        result = repo.get_interview(case_id)
+        return {"session_id": result.session_id, "status": result.status, "consent_confirmed": result.consent_confirmed}
+
+    @app.post("/api/cases/{case_id}/approve", dependencies=[Depends(owned_case)], response_model=Report)
     def approve(case_id: str, body: ApprovalRequest, request: Request):
         return request.app.state.ctx.repository.approve_report(case_id, body.report_version)
 

@@ -4,8 +4,17 @@ import { Brand, Workflow } from "./Landing";
 import { EvidenceList, ReportView } from "./Reports";
 import { ApiError, openWorkspace, request } from "./api";
 import type { Assessment, Case, Mode, Plan, Report } from "./contracts";
+import { InterviewPage } from "./features/interview/InterviewPage";
+import {PhoneInterview} from "./features/interview/PhoneInterview";
+import {ServiceStatus} from "./ServiceStatus";
 const steps = ["Details", "Interview plan", "Interview", "Results"];
 export function Workspace() {
+  const [usePhone, setUsePhone] = useState(true);
+  const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [channel, setChannel] = useState<"text"|"elevenlabs">("text");
+  const [lastStage, setLastStage] = useState<"plan"|"assess"|"report"|null>(null);
+  const [invitation, setInvitation] = useState<{session_id:string; candidate_url:string}|null>(null);
+  const [interviewDone, setInterviewDone] = useState(false);
   const [ready, setReady] = useState(false),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
@@ -48,9 +57,13 @@ export function Workspace() {
   }
   useEffect(() => {
     void connect();
+    request<{sessions:{elevenlabs:boolean}}>("/capabilities").then(c => {
+      setVoiceAvailable(c.sessions.elevenlabs);
+      if (c.sessions.elevenlabs) setChannel("elevenlabs");
+    }).catch(() => setVoiceAvailable(false));
   }, []);
   useEffect(() => {
-    if (ready && page !== "new")
+    if (ready && page !== "new" && page !== "status")
       void run(async () => setCases(await request("/cases")));
   }, [ready, page]);
   useEffect(() => {
@@ -78,6 +91,9 @@ export function Workspace() {
     history.pushState(null, "", "/app/" + next);
     if (next === "new") {
       setActive(null);
+      setInvitation(null);
+      setUsePhone(true);
+      setInterviewDone(false);
       setPlan(null);
       setReport(null);
       setAssessment(null);
@@ -88,10 +104,10 @@ export function Workspace() {
     if (!f) return;
     if (
       !/\.(pdf|docx)$/i.test(f.name) ||
-      f.size > 5 * 1024 * 1024 ||
+      f.size > 1000000 ||
       f.size === 0
     ) {
-      setError("Choose a non-empty PDF or DOCX up to 5 MB.");
+      setError("Choose a non-empty PDF or DOCX up to 1 MB.");
       return;
     }
     setFile(f);
@@ -116,6 +132,7 @@ export function Workspace() {
         current = await request<Case>("/cases", "POST", body);
         setActive(current);
       }
+      setLastStage("plan");
       setPlan(
         await request<Plan>("/cases/" + current.case_id + "/plan", "POST"),
       );
@@ -133,6 +150,12 @@ export function Workspace() {
         <div role="alert" className="error" id="workflow-error">
           <strong>Unable to continue</strong>
           <p>{error}</p>
+          {ready && active && lastStage && <button disabled={loading} onClick={() => void run(async () => {
+            const path = "/cases/" + active.case_id + "/" + lastStage + "?retry=true";
+            if (lastStage === "plan") { setPlan(await request<Plan>(path, "POST")); setStage(1); }
+            if (lastStage === "assess") { setAssessment(await request<Assessment>(path, "POST")); setStage(3); }
+            if (lastStage === "report") setReport(await request<Report>(path, "POST"));
+          })}>Retry {lastStage} after resolving the error (may use provider quota)</button>}
           {!ready && (
             <button onClick={() => void connect(true)} disabled={loading}>
               Create a new workspace
@@ -215,6 +238,7 @@ export function Workspace() {
           ["new", "New interview"],
           ["interviews", "My interviews"],
           ["reports", "Reports"],
+          ["status", "Services and usage"],
         ].map(([key, label]) => (
           <button
             className={page === key ? "active" : ""}
@@ -246,6 +270,8 @@ export function Workspace() {
             <h1>
               {page === "new"
                 ? "A better conversation starts here."
+                : page === "status"
+                  ? "Services and usage"
                 : page === "reports"
                   ? "Your reports"
                   : page === "overview"
@@ -258,7 +284,7 @@ export function Workspace() {
           </span>
         </header>
         {notice}
-        {page !== "new" ? (
+        {page === "status" ? <ServiceStatus/> : page !== "new" ? (
           <section className="panel">
             <h2>
               {page === "reports"
@@ -296,10 +322,17 @@ export function Workspace() {
                           setJd(data.case.job_description);
                           setMode(data.case.mode);
                           setFile(null);
-                          setStage(0);
+                          try {
+                            setPlan(await request<Plan>("/cases/" + c.case_id + "/plan"));
+                            setStage(1);
+                            try {
+                              await request("/cases/" + c.case_id + "/interview");
+                              setStage(2);
+                            } catch { /* No saved interview yet. */ }
+                          } catch { setPlan(null); setStage(0); }
+                          setInvitation(null);
                           setReport(null);
                         }
-                        setPlan(null);
                         setAssessment(null);
                         setActive(data.case);
                         setPage("new");
@@ -358,7 +391,7 @@ export function Workspace() {
                   }}
                 >
                   Upload CV<strong>Drop a PDF or DOCX here</strong>
-                  <span>or choose a file · up to 5 MB</span>
+                  <span>or choose a file · up to 1 MB</span>
                   <input
                     type="file"
                     accept=".pdf,.docx"
@@ -379,8 +412,7 @@ export function Workspace() {
                   </p>
                 )}
                 <p className="muted">
-                  Document parsing is pending backend integration. You can paste
-                  CV text below.
+                  PDF and DOCX are parsed locally. You can also paste CV text below.
                 </p>
                 <label>
                   Or paste CV text
@@ -460,21 +492,26 @@ export function Workspace() {
             {stage === 2 && (
               <section className="panel">
                 <p className="eyebrow">03 / INTERVIEW</p>
-                <h2>A moment to prepare.</h2>
-                <span className="tag">
-                  Not connected · interview has not started
-                </span>
-                <p>
-                  Voice interviews are temporarily unavailable. You can continue
-                  with a text interview once the interview service is connected.
-                </p>
-                <p>
-                  No microphone is being used. Gana’s interview component has
-                  not been supplied in this branch.
-                </p>
-                <button className="secondary" disabled>
-                  Text interview unavailable
-                </button>
+                <h2>Your interview</h2>
+                {active?.mode === "recruitment" && usePhone ? <>
+                  <PhoneInterview key={active.case_id} caseId={active.case_id} onResults={(a,r)=>{setAssessment(a);setReport(r);setStage(3);}} />
+                  <button className="secondary" onClick={()=>setUsePhone(false)}>Use text or browser interview instead</button>
+                </> : <>
+                {!invitation && <>
+                  <label>Interview channel<select value={channel} onChange={e => setChannel(e.target.value as "text"|"elevenlabs")}>
+                    <option value="elevenlabs" disabled={!voiceAvailable}>ElevenLabs browser voice{!voiceAvailable ? " ? setup required" : ""}</option>
+                    <option value="text">Text interview</option>
+                  </select></label>
+                  <p>{voiceAvailable ? "The candidate opens the invitation and speaks with the AI interviewer using their microphone." : "ElevenLabs voice setup is incomplete. Text is available as a clearly labelled alternative."}</p>
+                </>}
+                {!invitation && <button disabled={loading || !active} onClick={() => void run(async () => {
+                  const link = await request<{session_id:string; candidate_url:string}>("/cases/" + active!.case_id + "/sessions", "POST", {channel});
+                  setInvitation(link);
+                })}>Start {channel === "elevenlabs" ? "voice" : "text"} interview</button>}
+                {invitation && <>
+                  <p><a href={invitation.candidate_url} target="_blank" rel="noreferrer">Open candidate invitation</a></p>
+                  <InterviewPage sessionId={invitation.session_id} candidateToken={new URLSearchParams(new URL(invitation.candidate_url).hash.slice(1)).get("token") || ""} onCompleted={() => setInterviewDone(true)} />
+                </>}
                 <h3>Processing status</h3>
                 <p>
                   Transcript: awaiting interview · Assessment: not started ·
@@ -485,6 +522,7 @@ export function Workspace() {
                   onClick={() =>
                     void run(async () => {
                       if (!active) return;
+                      setLastStage("assess");
                       setAssessment(
                         await request<Assessment>(
                           "/cases/" + active.case_id + "/assess",
@@ -495,8 +533,9 @@ export function Workspace() {
                     })
                   }
                 >
-                  Check assessment availability
+                  Assess saved interview
                 </button>
+                </>}
               </section>
             )}
             {stage === 3 && (
@@ -525,14 +564,15 @@ export function Workspace() {
                     <button
                       disabled={!ready || loading}
                       onClick={() =>
-                        void run(async () =>
+                        void run(async () => {
+                          setLastStage("report");
                           setReport(
                             await request<Report>(
                               "/cases/" + active!.case_id + "/report",
                               "POST",
                             ),
-                          ),
-                        )
+                          );
+                        })
                       }
                     >
                       Prepare report

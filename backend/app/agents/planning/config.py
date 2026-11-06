@@ -43,14 +43,14 @@ class PlanningConfig:
         return self.knowledge_dir / "unreviewed"
 
 
-def load_config() -> PlanningConfig:
+def load_config(settings=None) -> PlanningConfig:
     return PlanningConfig(
         knowledge_dir=Path(os.environ.get("PLANNING_KNOWLEDGE_DIR") or REPO_ROOT / "knowledge"),
-        max_cv_pages=_int("PLANNING_MAX_CV_PAGES", 10, 1, 50),
+        max_cv_pages=getattr(settings, "planning_max_cv_pages", _int("PLANNING_MAX_CV_PAGES", 10, 1, 50)),
         # Default off: only teammate-approved records are used unless a developer
         # explicitly opts in; plans then carry a "pending review" warning.
-        allow_pending_review=_flag("PLANNING_ALLOW_PENDING_REVIEW"),
-        enable_tavily_fallback=_flag("PLANNING_ENABLE_TAVILY_FALLBACK"),
+        allow_pending_review=getattr(settings, "planning_allow_pending_review", _flag("PLANNING_ALLOW_PENDING_REVIEW")),
+        enable_tavily_fallback=getattr(settings, "planning_enable_tavily_fallback", _flag("PLANNING_ENABLE_TAVILY_FALLBACK")),
         # No default tier: LlamaParse costs credits, so it must be chosen explicitly.
-        llamaparse_tier=os.environ.get("PLANNING_LLAMAPARSE_TIER", "").strip(),
+        llamaparse_tier=getattr(settings, "planning_llamaparse_tier", os.environ.get("PLANNING_LLAMAPARSE_TIER", "").strip()),
     )
