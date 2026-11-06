@@ -11,7 +11,7 @@ Real-provider validation completed recruitment and mock flows with fictional dat
 - Human review: 36 reference chunks and 19 question records remain pending review. Provisional mode shows feedback but withholds scores. Approval must be performed by a teammate, followed by an index rebuild.
 - Voice: implementation present, no live browser conversation validated. Previous read-only account check found authentication/concurrency/bursting/prompt setup blockers. Keep disabled; see Gana's handoff. An incoming US phone call is not evidence of this browser integration working.
 - Evaluation: no reviewed 12-case golden set or baseline comparison. Two live synthetic smoke cases are not a quality benchmark.
-- Secondary providers and hosted Langfuse: unavailable adapters; no silent fallback.
+- Secondary providers: unavailable adapters; no silent fallback. Langfuse metadata tracing is implemented; see docs/langfuse.md for verification and privacy scope.
 - Mock learning resources remain empty; reporting preserves assessment evidence deterministically rather than calling another LLM.
 - The guest UI is a local prototype, not enterprise identity. Original candidate invitation links must be retained to resume an active interview after refreshing. An expired guest cookie cannot recover prior private cases automatically.
 - Vite build passes with a large JavaScript chunk advisory.

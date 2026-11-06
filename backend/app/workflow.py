@@ -51,7 +51,7 @@ def inputs(ctx, case_id, stage):
 
 
 def create_workflow(ctx: AgentContext):
-    async def execute(state: WorkflowState):
+    async def execute_inner(state: WorkflowState):
         repo, case_id, stage = ctx.repository, state["case_id"], state["stage"]
         receipt_id = None
         claimed = False
@@ -71,7 +71,8 @@ def create_workflow(ctx: AgentContext):
                 if previous and previous["fingerprint"] == fingerprint:
                     if previous["status"] == "succeeded":
                         kind = {"plan": "plan", "assess": "assessment", "report": "report"}[stage]
-                        return {"result": repo._get(conn, kind, case_id)}
+                        with ctx.telemetry.observation("cache_hit", metadata={"stage": stage}):
+                            return {"result": repo._get(conn, kind, case_id)}
                     if not state.get("retry", False):
                         raise AppError("STAGE_RETRY_REQUIRED", "Previous attempt failed; fix the cause then explicitly retry", 409)
                 repo._put(conn, "stage_run", receipt_id, {"fingerprint": fingerprint, "status": "running",
@@ -93,6 +94,14 @@ def create_workflow(ctx: AgentContext):
             if code not in {"STAGE_BUSY", "STAGE_RETRY_REQUIRED"}:
                 repo.set_status(case_id, "failed", {"stage": stage, "code": code, "message": message})
             raise
+    async def execute(state: WorkflowState):
+        with ctx.telemetry.observation("workflow." + state["stage"], metadata={
+            "case_id": state["case_id"], "stage": state["stage"], "operation": "workflow_request",
+            "prompt_version": PROMPT_VERSION}) as observation:
+            result = await execute_inner(state)
+            observation.update(metadata={"case_id": state["case_id"], "stage": state["stage"], "status": "succeeded"})
+            return result
+
     graph = StateGraph(WorkflowState)
     graph.add_node("execute", execute)
     graph.add_edge(START, "execute")
