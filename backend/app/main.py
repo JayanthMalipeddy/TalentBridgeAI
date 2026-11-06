@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+import asyncio
+import logging
 from typing import Literal
 from uuid import uuid4
 from fastapi import FastAPI, Depends, Request, Form, File, UploadFile
@@ -18,7 +20,7 @@ from .services.budget import BudgetService
 from .services.telemetry import Telemetry
 from .services.llm import LLMClient
 from .agents.interview.router import router
-from .agents.interview.service import create_session
+from .agents.interview.service import create_session, expire_sessions, voice_available
 from .agents.planning.agent import parse_cv
 from .workflow import create_workflow
 
@@ -36,8 +38,21 @@ def create_app(settings: Settings | None = None):
         budget, telemetry = BudgetService(repo, settings.provider_budget_limits), Telemetry()
         app.state.ctx = AgentContext(LLMClient(settings, budget, telemetry), repo, budget, telemetry, settings)
         app.state.workflow = create_workflow(app.state.ctx)
-        yield
-        repo.engine.dispose()
+        async def sweep():
+            while True:
+                try:
+                    expire_sessions(app.state.ctx)
+                except Exception:
+                    logging.getLogger("talentbridge.interview").error("session_expiry_failed")
+                await asyncio.sleep(5)
+        sweeper = asyncio.create_task(sweep())
+        try:
+            yield
+        finally:
+            sweeper.cancel()
+            try: await sweeper
+            except asyncio.CancelledError: pass
+            repo.engine.dispose()
     app = FastAPI(title="TalentBridge AI Foundation", version="1.0", lifespan=lifespan)
     app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.frontend_origin.split(",")], allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
 
@@ -71,7 +86,11 @@ def create_app(settings: Settings | None = None):
             "llamaparse": bool(settings.llama_cloud_api_key.get_secret_value()),
             "langfuse": bool(settings.langfuse_public_key and settings.langfuse_secret_key.get_secret_value()),
         }
-        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": {name: {"available": False, "code": "NOT_IMPLEMENTED"} for name in ["planning", "interview", "assessment", "reporting"]}, "sessions": {"text": True, "elevenlabs": False}, "integrations": {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}}
+        agents = {name: {"available": False, "code": "NOT_IMPLEMENTED"} for name in ["planning", "assessment", "reporting"]}
+        agents["interview"] = {"available": True, "channels": ["text"] + (["elevenlabs"] if voice_available(settings) else [])}
+        integrations = {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}
+        integrations["elevenlabs"] = {"configured": configured["elevenlabs"], "available": voice_available(settings), "reason": "Supervised browser mode; provider configuration and minute quota checked at authorization"}
+        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": agents, "sessions": {"text": True, "elevenlabs": voice_available(settings)}, "integrations": integrations, "fixture_demo": settings.app_env == "fixture-demo"}
 
     @app.post("/api/cases", dependencies=[Depends(recruiter)], response_model=CaseInput, status_code=201)
     async def new_case(request: Request, job_description: str = Form(min_length=1), mode: Literal["recruitment", "mock"] = Form(), role: str = Form(min_length=1), cv_text: str | None = Form(default=None), cv_file: UploadFile | None = File(default=None)):
