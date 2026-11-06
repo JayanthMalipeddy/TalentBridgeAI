@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Brand, Workflow } from "./Landing";
 import { EvidenceList, ReportView } from "./Reports";
@@ -9,6 +9,8 @@ import {PhoneInterview} from "./features/interview/PhoneInterview";
 import {ServiceStatus} from "./ServiceStatus";
 const steps = ["Details", "Interview plan", "Interview", "Results"];
 export function Workspace() {
+  const stagePanel = useRef<HTMLElement|null>(null);
+  const [operation, setOperation] = useState("");
   const [usePhone, setUsePhone] = useState(true);
   const [voiceAvailable, setVoiceAvailable] = useState(false);
   const [channel, setChannel] = useState<"text"|"elevenlabs">("text");
@@ -32,6 +34,14 @@ export function Workspace() {
     >([]),
     [page, setPage] = useState(location.pathname.split("/")[2] || "new"),
     [stage, setStage] = useState(0);
+  useEffect(() => {
+    if (stage === 0) return;
+    const frame = requestAnimationFrame(() => {
+      stagePanel.current?.scrollIntoView({block:"start", behavior:"instant"});
+      stagePanel.current?.focus({preventScroll:true});
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [stage]);
   async function connect(fresh = false) {
     setLoading(true);
     setError("");
@@ -84,6 +94,7 @@ export function Workspace() {
       if (e instanceof ApiError && e.status === 401) setReady(false);
     } finally {
       setLoading(false);
+      setOperation("");
     }
   }
   function navigate(next: string) {
@@ -121,6 +132,7 @@ export function Workspace() {
       return;
     }
     await run(async () => {
+      setOperation(file ? "Uploading and reading your CV?" : "Saving candidate details?");
       let current = active;
       if (!current) {
         const body = new FormData();
@@ -133,36 +145,39 @@ export function Workspace() {
         setActive(current);
       }
       setLastStage("plan");
+      setOperation("Retrieving knowledge and generating five interview questions. This may take a minute.");
       setPlan(
         await request<Plan>("/cases/" + current.case_id + "/plan", "POST"),
       );
       setStage(1);
     });
   }
-  const notice = (
-    <>
-      {loading && (
-        <p role="status" className="notice">
-          Waiting for the workspace service…
-        </p>
-      )}
-      {error && (
+  const failure = (error && (
         <div role="alert" className="error" id="workflow-error">
           <strong>Unable to continue</strong>
           <p>{error}</p>
-          {ready && active && lastStage && <button disabled={loading} onClick={() => void run(async () => {
+          {ready && chosen && <button type="button" className="secondary" onClick={() => navigate("interviews")}>View saved interviews</button>}
+          {ready && active && lastStage && <button type="button" disabled={loading} onClick={() => void run(async () => {
             const path = "/cases/" + active.case_id + "/" + lastStage + "?retry=true";
             if (lastStage === "plan") { setPlan(await request<Plan>(path, "POST")); setStage(1); }
             if (lastStage === "assess") { setAssessment(await request<Assessment>(path, "POST")); setStage(3); }
             if (lastStage === "report") setReport(await request<Report>(path, "POST"));
           })}>Retry {lastStage} after resolving the error (may use provider quota)</button>}
           {!ready && (
-            <button onClick={() => void connect(true)} disabled={loading}>
+            <button type="button" onClick={() => void connect(true)} disabled={loading}>
               Create a new workspace
             </button>
           )}
         </div>
+      ));
+  const notice = (
+    <>
+      {loading && !(chosen && page === "new" && stage === 0) && (
+        <p role="status" className="notice">
+          Waiting for the workspace service…
+        </p>
       )}
+      {!(chosen && page === "new" && stage === 0) && failure}
     </>
   );
   if (!chosen)
@@ -440,9 +455,11 @@ export function Workspace() {
                   Both a CV and a job description are required. Details stay on
                   this page after a failed request.
                 </p>
+                {failure}
+                {loading && <p role="status" aria-live="polite" className="notice">{operation || "Connecting to your workspace?"}</p>}
                 <div className="actions">
-                  <button disabled={!ready || loading}>
-                    Create interview plan →
+                  <button type="submit" disabled={!ready || loading} aria-busy={loading}>
+                    {loading ? (ready ? "Creating interview plan?" : "Connecting workspace?") : "Create interview plan ?"}
                   </button>
                   <button
                     type="button"
@@ -464,7 +481,8 @@ export function Workspace() {
               </form>
             )}
             {stage === 1 && plan && (
-              <section className="panel">
+              <section className="panel" ref={stagePanel} tabIndex={-1} aria-label="Generated interview plan">
+                <p role="status" className="notice">Interview plan ready. Review the questions, then continue to the interview.</p>
                 <p className="eyebrow">02 / INTERVIEW PLAN</p>
                 <h2>{active?.role}</h2>
                 <p>
@@ -490,7 +508,7 @@ export function Workspace() {
               </section>
             )}
             {stage === 2 && (
-              <section className="panel">
+              <section className="panel" ref={stagePanel} tabIndex={-1}>
                 <p className="eyebrow">03 / INTERVIEW</p>
                 <h2>Your interview</h2>
                 {active?.mode === "recruitment" && usePhone ? <>
@@ -539,7 +557,7 @@ export function Workspace() {
               </section>
             )}
             {stage === 3 && (
-              <section className="panel">
+              <section className="panel" ref={stagePanel} tabIndex={-1}>
                 {assessment && (
                   <>
                     <h2>Assessment</h2>

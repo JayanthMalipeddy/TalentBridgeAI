@@ -284,3 +284,32 @@ test("API failure preserves details and never shows a plan", async ({
     page.getByRole("button", { name: "Continue to interview" }),
   ).toHaveCount(0);
 });
+
+test("plan click shows progress then brings the generated plan into view", async ({page}) => {
+  await fixture(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/api/cases/*/plan", async route => { await gate; await route.fallback(); });
+  await page.goto("/app/new");
+  await page.getByRole("button", {name:"Use fictional sample"}).click();
+  const submitted = page.waitForRequest("**/api/cases/*/plan");
+  await page.getByRole("button", {name:"Create interview plan"}).click();
+  await submitted;
+  await expect(page.getByRole("button", {name:"Creating interview plan"})).toBeDisabled();
+  await expect(page.getByText(/Retrieving knowledge and generating/)).toBeInViewport();
+  release();
+  await expect(page.getByText("Interview plan ready. Review the questions, then continue to the interview.")).toBeInViewport();
+  await expect(page.getByRole("region", {name:"Generated interview plan"})).toBeFocused();
+});
+
+test("plan quota failure is shown beside the submit button", async ({page}) => {
+  await fixture(page);
+  await page.route("**/api/cases/*/plan", route => route.fulfill({status:429,json:{error:{code:"BUDGET_EXCEEDED",message:"Budget exhausted for groq/requests",retryable:false}}}));
+  await page.goto("/app/new");
+  await page.getByRole("button", {name:"Use fictional sample"}).click();
+  await page.getByRole("button", {name:"Create interview plan"}).click();
+  await expect(page.getByRole("alert")).toContainText("Budget exhausted");
+  await expect(page.getByRole("alert")).toBeInViewport();
+  await expect(page.getByRole("button", {name:"Create interview plan"})).toBeEnabled();
+  await expect(page.getByLabel("Or paste CV text")).toHaveValue(/Fictional sample/);
+});
