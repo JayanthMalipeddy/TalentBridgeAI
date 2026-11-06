@@ -1,4 +1,4 @@
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     elevenlabs_api_key: SecretStr = SecretStr("")
     elevenlabs_agent_id: str = ""
     elevenlabs_webhook_secret: SecretStr = SecretStr("")
+    elevenlabs_voice_enabled: bool = False
+    elevenlabs_supervised: bool = False
     keenable_api_key: SecretStr = SecretStr("")
     tavily_api_key: SecretStr = SecretStr("")
     llama_cloud_api_key: SecretStr = SecretStr("")
@@ -30,5 +32,12 @@ class Settings(BaseSettings):
     # JSON: {"groq": {"requests": 100, "tokens": 100000}}. Missing limits deny use.
     provider_budget_limits: dict[str, dict[str, float]] = Field(default_factory=dict)
     session_ttl_seconds: int = Field(default=3600, ge=60, le=86400)
-    session_max_duration_seconds: int = Field(default=1800, ge=60, le=7200)
+    session_duration_seconds: int = Field(default=360, ge=60, le=480)
+    session_max_duration_seconds: int = Field(default=480, ge=60, le=480)
     max_cv_bytes: int = Field(default=1000000, gt=0)
+
+    @field_validator("session_max_duration_seconds", mode="before")
+    @classmethod
+    def cap_legacy_duration(cls, value):
+        # Foundation .env files used 1800; preserve startup while enforcing eight minutes.
+        return min(int(value), 480)
