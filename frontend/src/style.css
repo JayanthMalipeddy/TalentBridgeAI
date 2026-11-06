@@ -1018,3 +1018,6 @@ blockquote {
     .app-shell { background-attachment: scroll; }
   }
 }
+.phone-permission { display: flex !important; align-items: center; gap: 12px; }
+.phone-permission input { width: 18px; height: 18px; flex-shrink: 0; }
+.phone-interview > button { margin-top: 20px; }

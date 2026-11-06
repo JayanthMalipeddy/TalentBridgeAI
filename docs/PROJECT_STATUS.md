@@ -1,4 +1,4 @@
-# Integrated release status — 6 November 2026
+# Integrated release status â€” 6 November 2026
 
 All teammate PRs (#1 interview, #2 reports/UI, #3 planning/RAG) were present on default branch `feat/platform-assessment` at `2e274c32998a30b4b54163898908d8c90f8bc89d`. The reviewed patch was applied selectively on `feat/release-integration`, preserving the newer modules.
 
@@ -17,3 +17,7 @@ Real-provider validation completed recruitment and mock flows with fictional dat
 - Vite build passes with a large JavaScript chunk advisory.
 
 Local runtime uses a separate ignored release-demo SQLite file, downloaded embeddings, provisional criteria, text interviews without optional follow-ups, and a cap of 12 Groq requests/100,000 reserved tokens. No subscription or overage settings were changed. Budget limits are not provider balance estimates.
+
+## Outbound phone scope update
+
+The user explicitly requested telephone calls, superseding the initial browser-only restriction. Recruitment now defaults to a recruiter-triggered ElevenLabs/Twilio call, with confirmed phone number, contact permission, idempotent dial, separate minute reservations, provider transcript polling and automatic assessment/reporting. See [phone handoff](phone-interviews.md). The connected ElevenLabs account returned zero phone numbers; live calling is blocked on that provider connection. No live test call was made.

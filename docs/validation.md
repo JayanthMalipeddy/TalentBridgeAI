@@ -1,4 +1,4 @@
-# Integration validation — 6 November 2026
+# Integration validation â€” 6 November 2026
 
 Windows, Python 3.11.16, Node 24.18.0. Integrated teammate code plus reviewed patch:
 
@@ -12,3 +12,7 @@ Windows, Python 3.11.16, Node 24.18.0. Integrated teammate code plus reviewed pa
 See `evals/live-integration-results.json` for actual inputs, frozen plans, transcripts, output limitations and recorded provider usage. Unknown token usage on failed calls is conservatively charged at the reserved bound, not reported as measured provider consumption. No live voice test, human-reviewed score agreement, baseline comparison or production validation is claimed.
 
 Official model references used during setup: https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2 and https://console.groq.com/docs/model/openai/gpt-oss-20b . The configured Groq model was verified by actual calls.
+
+## Phone integration checks
+
+108 backend tests passed, including seven new phone-flow tests; 6 frontend component tests and 7 browser regressions passed; production build passed. Phone tests mock providers and cover explicit recruiter authorization, dial-once behavior, unknown outcomes, quota cleanup, spoken-consent handling and confirmed transcript to report. A read-only ElevenLabs phone inventory returned zero connected numbers. No live phone call was placed.

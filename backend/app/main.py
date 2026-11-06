@@ -9,7 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from .settings import Settings
 from .contracts import CaseInput, InterviewPlan, Assessment, Report
 from .context import AgentContext
@@ -24,10 +24,17 @@ from .services.llm import LLMClient
 from .agents.interview.router import router
 from .agents.interview.service import create_session, expire_sessions, voice_available
 from .agents.planning.agent import parse_cv
+from .agents.interview import phone
 from .workflow import create_workflow, AGENTS_AVAILABLE, process_completion_events
 
 class SessionRequest(BaseModel):
     channel: Literal["text", "elevenlabs"]
+
+class PhoneRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    phone_number: str = Field(pattern=r"^\+[1-9]\d{7,14}$")
+    contact_permission: bool
+    request_id: str = Field(min_length=8, max_length=100)
 
 class ApprovalRequest(BaseModel):
     report_version: str
@@ -44,21 +51,31 @@ def create_app(settings: Settings | None = None):
             while True:
                 try:
                     expire_sessions(app.state.ctx)
-                    if settings.workflow_auto_process:
-                        await process_completion_events(app.state.ctx, app.state.workflow)
                 except Exception:
                     logging.getLogger("talentbridge.interview").error("session_expiry_failed")
                 await asyncio.sleep(5)
+        async def phone_worker():
+            while True:
+                try:
+                    await phone.refresh_calls(app.state.ctx)
+                    await process_completion_events(app.state.ctx, app.state.workflow, phone_only=not settings.workflow_auto_process)
+                except Exception:
+                    logging.getLogger("talentbridge.interview").error("completion_worker_failed")
+                await asyncio.sleep(15)
+        worker = asyncio.create_task(phone_worker())
         sweeper = asyncio.create_task(sweep())
         try:
             yield
         finally:
+            worker.cancel()
+            try: await worker
+            except asyncio.CancelledError: pass
             sweeper.cancel()
             try: await sweeper
             except asyncio.CancelledError: pass
             repo.engine.dispose()
     app = FastAPI(title="TalentBridge AI Foundation", version="1.0", lifespan=lifespan)
-    app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.frontend_origin.split(",")], allow_methods=["GET", "POST"], allow_credentials=True, allow_headers=["Authorization", "Content-Type", "X-CSRF-Token"])
+    app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.frontend_origin.split(",")], allow_methods=["GET", "POST"], allow_credentials=True, allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Recruiter-Token"])
 
     @app.exception_handler(AppError)
     async def app_error(request, exc):
@@ -105,7 +122,7 @@ def create_app(settings: Settings | None = None):
         integrations = {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}
         integrations["elevenlabs"] = {"configured": configured["elevenlabs"], "available": voice_available(settings), "reason": "Supervised browser mode; provider configuration and minute quota checked at authorization"}
         integrations["knowledge"] = {"configured": bool(settings.embedding_model), "available": Path(settings.embedding_model).is_dir() and (Path(settings.chroma_path) / "planning_index_manifest.json").is_file(), "provisional_criteria": settings.planning_allow_pending_review, "reason": "Only human-reviewed records may be used for scoring; provisional feedback withholds scores"}
-        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": agents, "sessions": {"text": True, "elevenlabs": voice_available(settings)}, "integrations": integrations, "fixture_demo": settings.app_env == "fixture-demo"}
+        return {"providers": request.app.state.ctx.llm.capabilities(), "agents": agents, "sessions": {"text": True, "elevenlabs": voice_available(settings)}, "phone": phone.capability(settings), "integrations": integrations, "fixture_demo": settings.app_env == "fixture-demo"}
 
     @app.post("/api/cases", dependencies=[Depends(owner)], response_model=CaseInput, status_code=201)
     async def new_case(request: Request, job_description: str = Form(min_length=1), mode: Literal["recruitment", "mock"] = Form(), role: str = Form(min_length=1), cv_text: str | None = Form(default=None), cv_file: UploadFile | None = File(default=None)):
@@ -154,6 +171,23 @@ def create_app(settings: Settings | None = None):
     async def sessions(case_id: str, body: SessionRequest, request: Request):
         ctx = request.app.state.ctx
         return await create_session(ctx.repository.get_case(case_id), ctx.repository.get_plan(case_id), body.channel, ctx)
+
+    @app.get("/api/cases/{case_id}/contact", dependencies=[Depends(owned_case)])
+    def contact(case_id: str, request: Request):
+        return {"suggested_numbers": phone.contact_numbers(request.app.state.ctx.repository.get_case(case_id).cv_text)}
+
+    @app.post("/api/cases/{case_id}/phone-call", dependencies=[Depends(owned_case)])
+    async def call_candidate(case_id: str, body: PhoneRequest, request: Request):
+        # Workspace ownership plus operator authorization; guest access alone cannot spend on calls.
+        recruiter(request, "Bearer " + request.headers.get("x-recruiter-token", ""))
+        return await phone.start_call(case_id, body.phone_number, body.contact_permission, body.request_id, request.app.state.ctx)
+
+    @app.get("/api/cases/{case_id}/phone-call", dependencies=[Depends(owned_case)])
+    def call_status(case_id: str, request: Request):
+        ctx = request.app.state.ctx
+        matches = [s for s in ctx.repository.list_sessions() if s["case_id"] == case_id and s.get("transport") == "phone"]
+        if not matches: raise AppError("NOT_FOUND", "No phone interview started", 404)
+        return phone.public_call(matches[0], ctx)
 
     @app.post("/api/cases/{case_id}/assess", dependencies=[Depends(owned_case)], response_model=Assessment)
     async def assess(case_id: str, request: Request):

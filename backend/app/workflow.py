@@ -100,13 +100,14 @@ def create_workflow(ctx: AgentContext):
     return graph.compile()
 
 
-async def process_completion_events(ctx, workflow):
+async def process_completion_events(ctx, workflow, phone_only=False):
     """Opt-in single-instance worker; pending events survive restart/module delivery."""
     for event_id, event in ctx.repository.all_records("workflow_event"):
         if event["status"] not in {"pending", "waiting_dependency", "waiting_provider"}: continue
         try:
             interview = ctx.repository.get_interview(event["case_id"])
             session = ctx.repository.get_session(event["session_id"])
+            if phone_only and session.get("transport") != "phone": continue
             if session.get("conversation_id") and not session.get("provider_final"):
                 event["status"] = "waiting_provider"
             elif interview.status != "completed" or not interview.consent_confirmed:

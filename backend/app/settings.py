@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     elevenlabs_api_key: SecretStr = SecretStr("")
     elevenlabs_agent_id: str = ""
     elevenlabs_webhook_secret: SecretStr = SecretStr("")
+    elevenlabs_phone_enabled: bool = False
+    elevenlabs_phone_number_id: str = ""
+    elevenlabs_phone_agent_id: str = ""
     elevenlabs_voice_enabled: bool = False
     elevenlabs_supervised: bool = False
     keenable_api_key: SecretStr = SecretStr("")

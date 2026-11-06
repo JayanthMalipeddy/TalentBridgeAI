@@ -208,6 +208,7 @@ test("validation, failure recovery, plan and honest interview state", async ({
     page.getByRole("heading", { name: "Integration Engineer", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Continue to interview" }).click();
+  await page.getByRole("button", { name: "Use text or browser interview instead" }).click();
   await expect(page.getByRole("button", { name: "Start text interview" })).toBeEnabled();
   await page
     .getByRole("button", { name: "Assess saved interview" })

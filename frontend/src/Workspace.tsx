@@ -5,9 +5,11 @@ import { EvidenceList, ReportView } from "./Reports";
 import { ApiError, openWorkspace, request } from "./api";
 import type { Assessment, Case, Mode, Plan, Report } from "./contracts";
 import { InterviewPage } from "./features/interview/InterviewPage";
+import {PhoneInterview} from "./features/interview/PhoneInterview";
 import {ServiceStatus} from "./ServiceStatus";
 const steps = ["Details", "Interview plan", "Interview", "Results"];
 export function Workspace() {
+  const [usePhone, setUsePhone] = useState(true);
   const [voiceAvailable, setVoiceAvailable] = useState(false);
   const [channel, setChannel] = useState<"text"|"elevenlabs">("text");
   const [lastStage, setLastStage] = useState<"plan"|"assess"|"report"|null>(null);
@@ -90,6 +92,7 @@ export function Workspace() {
     if (next === "new") {
       setActive(null);
       setInvitation(null);
+      setUsePhone(true);
       setInterviewDone(false);
       setPlan(null);
       setReport(null);
@@ -490,6 +493,10 @@ export function Workspace() {
               <section className="panel">
                 <p className="eyebrow">03 / INTERVIEW</p>
                 <h2>Your interview</h2>
+                {active?.mode === "recruitment" && usePhone ? <>
+                  <PhoneInterview key={active.case_id} caseId={active.case_id} onResults={(a,r)=>{setAssessment(a);setReport(r);setStage(3);}} />
+                  <button className="secondary" onClick={()=>setUsePhone(false)}>Use text or browser interview instead</button>
+                </> : <>
                 {!invitation && <>
                   <label>Interview channel<select value={channel} onChange={e => setChannel(e.target.value as "text"|"elevenlabs")}>
                     <option value="elevenlabs" disabled={!voiceAvailable}>ElevenLabs browser voice{!voiceAvailable ? " ? setup required" : ""}</option>
@@ -528,6 +535,7 @@ export function Workspace() {
                 >
                   Assess saved interview
                 </button>
+                </>}
               </section>
             )}
             {stage === 3 && (

@@ -32,7 +32,7 @@ def flag(data, name):
 
 
 def build_result(data, session):
-    consent = session["consent_confirmed"] and flag(data, "consent_given") is True
+    consent = (session.get("contact_permission", False) if session.get("transport") == "phone" else session["consent_confirmed"]) and flag(data, "consent_given") is True
     withdrawn = session.get("consent_withdrawn") or flag(data, "consent_withdrawn") is True
     duration = (data.get("metadata") or {}).get("call_duration_secs")
     valid_duration = isinstance(duration, (int, float)) and not isinstance(duration, bool) and 0 <= duration < float("inf")

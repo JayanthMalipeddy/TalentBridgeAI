@@ -10,7 +10,7 @@ Upload PDF/DOCX or paste CV text, generate five questions with local retrieval a
 
 The 55 library records currently have **pending human review** status. Default planning excludes them. Explicit `PLANNING_ALLOW_PENDING_REVIEW=true` permits provisional questions/feedback, visibly labelled, with all numerical scores withheld. A teammate must actually review criteria before changing their metadata to approved. Do not label this release's library human-approved.
 
-ElevenLabs browser integration exists but live voice is disabled until the account setup, prompt, webhook, supervision and minute allowance pass checks. No telephone calls are placed. Gemini/Ollama and hosted Langfuse remain explicit unavailable integrations.
+ElevenLabs browser integration exists but live voice is disabled until the account setup, prompt, webhook, supervision and minute allowance pass checks. Recruitment now defaults to an explicitly triggered outbound phone interview; see [phone setup and current blocker](docs/phone-interviews.md). The connected account currently has no phone numbers, so live calling is not yet available. Gemini/Ollama and hosted Langfuse remain explicit unavailable integrations.
 
 ## Fresh checkout on Windows
 
@@ -57,4 +57,4 @@ See [validation](docs/validation.md) and [actual synthetic live-provider artifac
 
 Read [contracts](docs/contracts.md), [ownership](docs/ownership.md), [release status](docs/PROJECT_STATUS.md), and [Jayanth's integration handoff](docs/jayanth-handoff.md). Module notes: [Priya](docs/priya-handoff.md), [Gana](docs/gana-handoff.md), [Drashti](docs/drashti-handoff.md).
 
-No automatic email, submission, telephone interview, paid overage, or silent provider fallback is implemented. Failed billable stages require explicit retry; uncertain interrupted stages require operator reconciliation via `scripts/recover_stage.py`. Preserve the database and Chroma path across restarts.
+No automatic email, submission, paid overage, or silent provider fallback is implemented. Phone interviews require recruiter authorization and an explicitly configured outbound number. Failed billable stages require explicit retry; uncertain interrupted stages require operator reconciliation via `scripts/recover_stage.py`. Preserve the database and Chroma path across restarts.

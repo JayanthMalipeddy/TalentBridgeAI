@@ -30,6 +30,7 @@ class VoiceReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
     confirmed_stopped_at_provider: bool
     actual_minutes: float = Field(ge=0)
+    actual_twilio_minutes: float | None = Field(default=None, ge=0)
 
 
 @router.post("/webhooks/elevenlabs")
@@ -110,5 +111,5 @@ def release_voice(session_id: str, body: VoiceReviewRequest, request: Request):
     if not body.confirmed_stopped_at_provider:
         raise AppError("VOICE_REVIEW_REQUIRED", "Verify that the conversation stopped and check usage in ElevenLabs before release", 409)
     # Return only usage/release state to recruiters, never private mock transcripts.
-    voice.release_after_operator_review(session_id, body.actual_minutes, request.app.state.ctx)
+    voice.release_after_operator_review(session_id, body.actual_minutes, request.app.state.ctx, body.actual_twilio_minutes)
     return {"status":"released", "session_id":session_id}
