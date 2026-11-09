@@ -4,6 +4,7 @@ import {Landing, Brand} from './Landing';
 import {Workspace} from './Workspace';
 import {InterviewPage} from './features/interview/InterviewPage';
 import './style.css';
+import './theme.css';
 
 function App() {
   const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get('token') ?? '');

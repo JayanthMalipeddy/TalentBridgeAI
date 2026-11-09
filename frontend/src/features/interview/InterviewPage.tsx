@@ -87,7 +87,7 @@ function Interview({sessionId, candidateToken, onCompleted}:InterviewPageProps) 
   async function stop(withdraw:boolean) {
     try {await conversation.endSession();} finally {await action('/stop', {withdraw_consent:withdraw});}
   }
-  return <section className="bg-white rounded-xl p-6 grid gap-4" aria-label="Candidate interview">
+  return <section className="interview-surface grid gap-4" aria-label="Candidate interview">
     <h2 className="text-2xl font-semibold">{session?.channel === 'elevenlabs' ? 'Browser voice interview' : 'Text interview'}</h2>
     <p>English · Integration Engineer · AI interview assistant</p>
     {error && <p role="alert" className="text-red-700">{error}</p>}
