@@ -3,7 +3,7 @@ import hashlib
 import json
 import re
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, create_model
 from ...contracts import EvidenceRef, InterviewPlan, Question
 from ...errors import AppError
 
@@ -56,6 +56,15 @@ async def build_role_plan(case, ctx):
     if not case.role.strip() or not case.job_description.strip():
         raise AppError('ROLE_REQUIREMENTS', 'Enter a job title and job description before planning', 422)
     sections = source_sections(case)
+    if not any(ref.source_type=='job_description' for ref in sections.values()):
+        raise AppError('ROLE_REQUIREMENTS', 'Include readable job requirements within the first 12000 characters of the JD', 422)
+    # Constrain IDs in the schema too, so the shared adapter can repair an
+    # invalid selection within its existing single schema-repair allowance.
+    source_id_type = Literal[tuple(sections)]
+    grounded_question = create_model('GroundedRoleQuestion', __base__=RoleQuestion,
+        source_ids=(list[source_id_type], Field(min_length=1, max_length=6)))
+    response_model = create_model('GroundedRoleQuestions', __base__=RoleQuestions,
+        questions=(list[grounded_question], Field(min_length=5, max_length=5)))
     result = await ctx.llm.generate_structured(
         'planning.role',
         'Prepare exactly five interview questions for the supplied role and job description. '
@@ -69,7 +78,7 @@ async def build_role_plan(case, ctx):
         'Provide expected topics and explicit 0–3 scoring anchors accepting alternative valid approaches. '
         'These are provisional AI-generated criteria, not a human-approved knowledge library.',
         {'role': case.role[:200], 'sections': [{'source_id': key, 'source_type': ref.source_type, 'text': ref.excerpt}
-            for key, ref in sections.items()]}, RoleQuestions)
+            for key, ref in sections.items()]}, response_model)
     questions = []
     for index, question in enumerate(result.questions, 1):
         evidence = []

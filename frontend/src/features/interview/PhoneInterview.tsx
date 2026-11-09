@@ -1,9 +1,9 @@
 ﻿import {useEffect, useRef, useState} from 'react';
 import {ApiError, request} from '../../api';
 import type {Assessment, Report} from '../../contracts';
-type Call = {provider_status?:string; processing_paused?:boolean; transcript_available?:boolean; state:string; session_id:string; phone_last_four:string; provider_final:boolean; interview_status:string|null; case_status:{status:string;failure?:{code:string;message:string}|null}; message:string};
-type Props = {caseId:string; onResults:(assessment:Assessment,report:Report)=>void};
-export function PhoneInterview({caseId,onResults}:Props) {
+type Call = {hr_workflow?:boolean;provider_status?:string; processing_paused?:boolean; transcript_available?:boolean; state:string; session_id:string; phone_last_four:string; provider_final:boolean; interview_status:string|null; case_status:{status:string;failure?:{code:string;message:string}|null}; message:string};
+type Props = {caseId:string; onResults:(assessment:Assessment,report:Report)=>void; onReview?:()=>void};
+export function PhoneInterview({caseId,onResults,onReview}:Props) {
   const [transcript,setTranscript]=useState<{turns:{turn_id:string;speaker:string;question_id:string|null;text:string}[]}|null>(null);
   const [number,setNumber]=useState(''),[token,setToken]=useState(''),[permission,setPermission]=useState(false);
   const [call,setCall]=useState<Call|null>(null),[missing,setMissing]=useState<string[]>([]),[ready,setReady]=useState(false);
@@ -56,7 +56,8 @@ export function PhoneInterview({caseId,onResults}:Props) {
       </section>}
       {call.case_status.failure && <p role="alert">{call.case_status.failure.message}</p>}
       <p>One call attempt per case. Refreshing this page does not redial. Stop requests are handled by the voice agent; the recruiter supervises through ElevenLabs.</p>
-      {call.case_status.status==='report_ready' && <button onClick={async()=>{try{const a=await request<Assessment>(`/cases/${caseId}/assessment`);const r=await request<Report>(`/cases/${caseId}/report`);onResults(a,r);}catch(e){setError((e as Error).message);}}}>View assessment and report</button>}
+      {call.provider_final&&onReview&&<button onClick={onReview}>Review assessment and email decision</button>}
+      {call.case_status.status==='report_ready'&&!call.hr_workflow && <button onClick={async()=>{try{const a=await request<Assessment>(`/cases/${caseId}/assessment`);const r=await request<Report>(`/cases/${caseId}/report`);onResults(a,r);}catch(e){setError((e as Error).message);}}}>View assessment and report</button>}
     </>}
   </section>;
 }

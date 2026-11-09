@@ -19,7 +19,7 @@ it('prefills CV identity and retains original attachment before interview',async
  for(const label of ['Job reference','Company / client','Recruiter name for emails','Recruiter contact'])fireEvent.change(screen.getByLabelText(label),{target:{value:'Confirmed detail'}});
  fireEvent.change(screen.getByLabelText('Client email'),{target:{value:'client@example.com'}});
  for(const box of screen.getAllByRole('checkbox'))fireEvent.click(box);
- fireEvent.submit(screen.getByText('Save details and continue to interview').closest('form')!);
+ fireEvent.submit(screen.getByText('Candidate ready for interview').closest('form')!);
  await waitFor(()=>expect(ready).toHaveBeenCalledOnce());
  expect(api.mock.calls[2][2]).toMatchObject({candidate_name:'Alex Morgan',candidate_email:'alex@example.com',client_email:'client@example.com',candidate_email_confirmed:true,cv_sharing_authorized:true,agency_name:''});
 });

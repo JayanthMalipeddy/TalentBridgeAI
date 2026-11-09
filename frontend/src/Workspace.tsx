@@ -106,6 +106,7 @@ export function Workspace() {
     setPage(next);
     history.pushState(null, "", "/app/" + next);
     if (next === "new") {
+      setRole("");setCv("");setJd("");setFile(null);setRecruitmentReadyFor(null);
       setActive(null);
       setInvitation(null);
       setUsePhone(true);
@@ -535,7 +536,7 @@ export function Workspace() {
                 <p className="eyebrow">03 / INTERVIEW</p>
                 <h2>Your interview</h2>
                 {active?.mode === "recruitment" && recruitmentReadyFor !== active.case_id ? <RecruitmentSetup key={active.case_id} caseId={active.case_id} onReady={()=>setRecruitmentReadyFor(active.case_id)}/> : active?.mode === "recruitment" && usePhone ? <>
-                  <PhoneInterview key={active.case_id} caseId={active.case_id} onResults={(a,r)=>{setAssessment(a);setReport(r);setStage(3);}} />
+                  <PhoneInterview key={active.case_id} caseId={active.case_id} onReview={()=>{setHrCaseId(active.case_id);setPage("hr");}} onResults={(a,r)=>{setAssessment(a);setReport(r);setStage(3);}} />
                   <button className="secondary" onClick={()=>setUsePhone(false)}>Use text or browser interview instead</button>
                 </> : <>
                 {!invitation && <>
@@ -551,15 +552,15 @@ export function Workspace() {
                 })}>Start {channel === "elevenlabs" ? "voice" : "text"} interview</button>}
                 {invitation && <>
                   <p><a href={invitation.candidate_url} target="_blank" rel="noreferrer">Open candidate invitation</a></p>
-                  <InterviewPage sessionId={invitation.session_id} candidateToken={new URLSearchParams(new URL(invitation.candidate_url).hash.slice(1)).get("token") || ""} onCompleted={() => setInterviewDone(true)} />
+                  <InterviewPage sessionId={invitation.session_id} candidateToken={new URLSearchParams(new URL(invitation.candidate_url).hash.slice(1)).get("token") || ""} onCompleted={() => {setInterviewDone(true);if(active?.mode === "recruitment"){setHrCaseId(active.case_id);setPage("hr");}}} />
                 </>}
-                <h3>Processing status</h3>
+                <h3>Processing status</h3>{active?.mode === "recruitment"&&<button onClick={()=>{setHrCaseId(active.case_id);setPage("hr");}}>Review assessment and email decision</button>}
                 <p>
                   Transcript: awaiting interview · Assessment: not started ·
                   Report: not started
                 </p>
                 <button
-                  disabled={!ready || loading}
+                  disabled={!ready || loading || active?.mode === "recruitment"}
                   onClick={() =>
                     void run(async () => {
                       if (!active) return;
@@ -625,6 +626,7 @@ export function Workspace() {
                 )}
                 {report && (
                   <ReportView
+                    reviewDecision={()=>{setHrCaseId(report!.case_id);setPage("hr");}}
                     report={report}
                     busy={loading}
                     approve={() =>

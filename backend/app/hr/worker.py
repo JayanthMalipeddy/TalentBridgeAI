@@ -12,6 +12,8 @@ async def tick(ctx):
                 binding=service._inputs(c,cid)[4]
                 prior=maybe(ctx.repository,c,'hr_run',digest(binding))
                 if prior:
+                    if prior['state']=='succeeded':
+                        service._store_report(c,cid,ctx.repository._get(c,'hr_assessment',cid))
                     if prior['state']=='running' and (datetime.now(timezone.utc)-datetime.fromisoformat(prior['started_at'])).total_seconds()>300:
                         ctx.repository._put(c,'hr_run',digest(binding),{'case_id':cid,'state':'failed','error':'INTERRUPTED_ASSESSMENT_RETRY_REQUIRED'})
                     continue

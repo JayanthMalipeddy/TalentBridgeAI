@@ -241,12 +241,10 @@ test("validation, failure recovery, plan and honest interview state", async ({
   await completeRecruitmentSetup(page);
   await page.getByRole("button", { name: "Use text or browser interview instead" }).click();
   await expect(page.getByRole("button", { name: "Start text interview" })).toBeEnabled();
-  await page
-    .getByRole("button", { name: "Assess saved interview" })
-    .click();
-  await expect(page.getByText("not assessed", { exact: true })).toBeVisible();
-  await capture(page, "assessment");
-  await page.getByRole("button", { name: "Prepare report" }).click();
+  await expect(page.getByRole("button", {name:"Assess saved interview"})).toBeDisabled();
+  await expect(page.getByRole("button", {name:"Review assessment and email decision"})).toBeVisible();
+  await page.getByRole("button", {name:"Reports",exact:true}).click();
+  await page.getByRole("button", {name:"Open report"}).click();
   await expect(
     page.getByText("Report version: fixture-version-7"),
   ).toBeVisible();

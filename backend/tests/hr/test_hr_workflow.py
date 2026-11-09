@@ -18,8 +18,6 @@ from app.errors import AppError
 def setup(tmp_path,contracts):
     settings=Settings(_env_file=None,database_url='sqlite:///'+str(tmp_path/'hr.db'),app_env='test',email_pacing_seconds=0,gmail_token_encryption_key=Fernet.generate_key().decode())
     repo=Repository(make_engine(settings.database_url));repo.save_case(contracts['case']);repo.save_plan(contracts['plan'])
-    repo.save_session({'case_id':'test-case','session_id':'s1','state':'completed','channel':'text','frozen_plan':contracts['plan'].model_dump()})
-    repo.save_interview(contracts['interview'])
     ctx=SimpleNamespace(settings=settings,repository=repo,telemetry=Telemetry(),llm=SimpleNamespace(generate_structured=AsyncMock(return_value=Findings(findings=[Finding(criterion_id='c1',score=3,rationale='Accurate practical answer',evidence=[Citation(turn_id='turn-1',excerpt='Synthetic answer')])],transcript_quality_sufficient=True))))
     service=HRService(ctx)
     config=Configuration(job_title='Engineer',job_reference='JOB-1',client_name='Example client',client_email='client@example.com',candidate_name='Fictional candidate',candidate_email='candidate@example.com',candidate_email_confirmed=True,cv_sharing_authorized=True,recruiter_name='Test reviewer',agency_name='Example agency',recruiter_contact='hr@example.com',approved_summary='Explained the tested principles.')
@@ -27,6 +25,8 @@ def setup(tmp_path,contracts):
     service.attachment('test-case','fictional.txt',b'Original synthetic CV')
     service.configure('test-case',config)
     service.rubric('test-case',Rubric(criteria=[dict(criterion_id='c1',question_id='q1',title='Testing',expected_principles='Assertions',anchors={str(i):'Reviewed anchor '+str(i) for i in range(5)})],reviewer='Test HR',reviewed=True))
+    repo.save_session({'case_id':'test-case','session_id':'s1','state':'completed','channel':'text','frozen_plan':contracts['plan'].model_dump()})
+    repo.save_interview(contracts['interview'])
     repo.put('gmail','sender',{'email':'sender@example.com','connected_at':'test-connection','encrypted_tokens':'TEST-ONLY'})
     yield ctx,service,config
     repo.engine.dispose()
@@ -256,3 +256,29 @@ async def test_summary_prefilled_from_validated_assessment_and_agency_optional(s
     assert 'Accurate practical answer' in p['messages']['client']['body']
     decide(s)
     assert len(ctx.repository.all_records('hr_outbox'))==1
+
+
+async def test_corrected_assessment_survives_worker_and_cached_retry(setup):
+    from app.hr.worker import tick
+    ctx,s,_=setup
+    first=await s.assess('test-case')
+    corrected=s.correct('test-case',Correction(assessment_version=first['version'],reviewer='HR',reason='Verified the supporting answer against the criterion',findings=Findings(findings=[Finding(criterion_id='c1',score=1,rationale='Verified lower score',evidence=[Citation(turn_id='turn-1',excerpt='Synthetic answer')])],transcript_quality_sufficient=True)))
+    await tick(ctx)
+    assert (await s.assess('test-case'))['version']==corrected['version']
+    assert ctx.repository.get('hr_report','test-case')['assessment_version']==corrected['version']
+    assert '25.00%' in ctx.repository.get_report('test-case').summary
+    assert ctx.llm.generate_structured.await_count==1
+
+async def test_frozen_rubric_cannot_be_replaced_after_interview(setup):
+    ctx,s,_=setup
+    rubric=ctx.repository.get('hr_rubric','test-case')
+    with pytest.raises(AppError) as exc:s.rubric('test-case',Rubric(criteria=rubric['criteria'],reviewer='HR',reviewed=True))
+    assert exc.value.code=='RUBRIC_FROZEN'
+
+@pytest.mark.parametrize('threshold',[60,65,70])
+def test_threshold_range_and_review_bands(contracts,threshold):
+    criterion={'criterion_id':'c1','question_id':'q1','weight':1}
+    findings=Findings(findings=[Finding(criterion_id='c1',score=2,rationale='Partial evidence',evidence=[Citation(turn_id='turn-1',excerpt='Synthetic answer')])],transcript_quality_sufficient=True)
+    result=calculate({'criteria':[criterion]},findings,contracts['interview'].model_dump(),threshold)
+    assert result['score']==50 and result['human_decision_required'] is True
+    assert result['review_band']==('near_threshold' if threshold==60 else 'below_threshold')

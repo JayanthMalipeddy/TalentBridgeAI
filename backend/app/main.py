@@ -193,16 +193,27 @@ def create_app(settings: Settings | None = None):
     @app.post("/api/cases/{case_id}/sessions", dependencies=[Depends(owned_case)])
     async def sessions(case_id: str, body: SessionRequest, request: Request):
         ctx = request.app.state.ctx
+        from .hr.service import HRService
+        HRService(ctx).ensure_ready(case_id)
         return await create_session(ctx.repository.get_case(case_id), ctx.repository.get_plan(case_id), body.channel, ctx)
 
     @app.get("/api/cases/{case_id}/contact", dependencies=[Depends(owned_case)])
     def contact(case_id: str, request: Request):
-        return {"suggested_numbers": phone.contact_numbers(request.app.state.ctx.repository.get_case(case_id).cv_text)}
+        from .hr.contacts import contacts
+        from .hr.common import maybe
+        repo=request.app.state.ctx.repository
+        suggestions=contacts(repo.get_case(case_id).cv_text)
+        with repo.engine.connect() as c:config=maybe(repo,c,'hr_config',case_id)
+        confirmed=config and config['data'].get('candidate_phone')
+        if confirmed:suggestions['suggested_numbers']=[confirmed]
+        return suggestions
 
     @app.post("/api/cases/{case_id}/phone-call", dependencies=[Depends(owned_case)])
     async def call_candidate(case_id: str, body: PhoneRequest, request: Request):
         # Workspace ownership plus operator authorization; guest access alone cannot spend on calls.
         recruiter(request, "Bearer " + request.headers.get("x-recruiter-token", ""))
+        from .hr.service import HRService
+        HRService(request.app.state.ctx).ensure_ready(case_id)
         return await phone.start_call(case_id, body.phone_number, body.contact_permission, body.request_id, request.app.state.ctx)
 
     @app.get("/api/cases/{case_id}/phone-call", dependencies=[Depends(owned_case)])
@@ -255,7 +266,7 @@ def create_app(settings: Settings | None = None):
         if repo.get_case(case_id).mode == "mock" and owner(request) is None:
             raise AppError("FORBIDDEN", "Mock results are private to their owner", 403)
         result = repo.get_interview(case_id)
-        return {"session_id": result.session_id, "status": result.status, "consent_confirmed": result.consent_confirmed}
+        return result
 
     @app.post("/api/cases/{case_id}/approve", dependencies=[Depends(owned_case)], response_model=Report)
     def approve(case_id: str, body: ApprovalRequest, request: Request):

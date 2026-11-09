@@ -87,4 +87,5 @@ class Gmail:
         if response.status_code!=200:raise AppError('GMAIL_REJECTED','Gmail rejected the message; check attachment and recipients',422)
         try:message_id=response.json()['id']
         except (ValueError,KeyError):raise AppError('DELIVERY_UNKNOWN','Gmail response lacked a message ID; reconcile before retry',409)
+        if not isinstance(message_id,str) or not message_id.strip():raise AppError('DELIVERY_UNKNOWN','Gmail returned an invalid message ID; reconcile before retry',409)
         return message_id

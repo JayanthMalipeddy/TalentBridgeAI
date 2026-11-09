@@ -22,12 +22,13 @@ class Configuration(Strict):
     client_email: EmailStr | None = None
     candidate_name: str = Field(min_length=1, max_length=200)
     candidate_email: EmailStr | None = None
+    candidate_phone: str | None = Field(default=None, pattern=r'^\+[1-9]\d{7,14}$')
     candidate_email_confirmed: bool = False
     cv_sharing_authorized: bool = False
     recruiter_name: str = Field(min_length=1, max_length=200)
     agency_name: str = Field(default='', max_length=200)
     recruiter_contact: str = Field(min_length=1, max_length=500)
-    threshold: float = Field(default=70, ge=65, le=70, allow_inf_nan=False)
+    threshold: float = Field(default=70, ge=60, le=70, allow_inf_nan=False)
     approved_summary: str = Field(default='', max_length=12000)
     templates: dict[Literal['client','candidate','rejection'], Message] = Field(default_factory=dict)
 

@@ -41,6 +41,8 @@ def review(case_id:str,request:Request):return HRService(ctx(request)).preview(c
 async def prepare(case_id:str,request:Request):return await HRService(ctx(request)).prepare(case_id)
 @case_router.post('/configuration')
 def configure(case_id:str,body:Configuration,request:Request):return HRService(ctx(request)).configure(case_id,body)
+@case_router.post('/ready')
+def ready(case_id:str,request:Request):return HRService(ctx(request)).mark_ready(case_id)
 @case_router.post('/cv')
 async def cv(case_id:str,request:Request,cv_file:UploadFile=File(...)):
     content=await cv_file.read(ctx(request).settings.max_cv_bytes+1)

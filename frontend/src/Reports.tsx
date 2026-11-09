@@ -21,12 +21,15 @@ export function ReportView({
   report,
   approve,
   busy = false,
+  reviewDecision,
 }: {
   report: Report;
   approve: () => void;
   busy?: boolean;
+  reviewDecision?: () => void;
 }) {
   const [message, setMessage] = useState("");
+  const hrReport=report.report_version.startsWith("hr-");
   return (
     <article className="report">
       <p className="eyebrow">
@@ -80,9 +83,11 @@ export function ReportView({
         </>
       )}
       <p>Report version: {report.report_version}</p>
-      {report.mode === "recruitment" && <p>Approval records your review of this report version. It does not accept or reject the candidate, send an email, or place a call. A new report version requires fresh approval.</p>}
+      {hrReport&&<p>Review the assessment, recipients and attachment in HR review. Confirming the final decision there queues the appropriate emails.</p>}
+      {report.mode === "recruitment" && !hrReport && <p>Approval records your review of this report version. It does not accept or reject the candidate, send an email, or place a call. A new report version requires fresh approval.</p>}
       <div className="actions">
-        {report.mode === "recruitment" && (
+        {hrReport&&reviewDecision&&<button onClick={reviewDecision}>Review assessment and email decision</button>}
+        {report.mode === "recruitment" && !hrReport && (
           <button
             disabled={busy || report.approval_status === "approved"}
             onClick={approve}

@@ -113,7 +113,7 @@ def create_workflow(ctx: AgentContext):
 async def process_completion_events(ctx, workflow, phone_only=False):
     """Opt-in single-instance worker; pending events survive restart/module delivery."""
     for event_id, event in ctx.repository.all_records("workflow_event"):
-        if event["status"] not in {"pending", "waiting_dependency", "waiting_provider"}: continue
+        if event["status"] not in {"pending", "waiting_dependency", "waiting_provider", "waiting_hr_assessment"}: continue
         try:
             interview = ctx.repository.get_interview(event["case_id"])
             session = ctx.repository.get_session(event["session_id"])
@@ -122,6 +122,16 @@ async def process_completion_events(ctx, workflow, phone_only=False):
                 event["status"] = "paused"
                 ctx.repository.put("workflow_event", event_id, event)
                 continue
+            if ctx.repository.get_case(event['case_id']).mode == 'recruitment':
+                from .hr.common import maybe
+                with ctx.repository.engine.connect() as c:
+                    config=maybe(ctx.repository,c,'hr_config',event['case_id'])
+                    rubric=maybe(ctx.repository,c,'hr_rubric',event['case_id'])
+                    report=maybe(ctx.repository,c,'hr_report',event['case_id'])
+                if config and rubric:
+                    event['status']='completed' if report else 'waiting_hr_assessment'
+                    ctx.repository.put('workflow_event',event_id,event)
+                    continue
             if session.get("conversation_id") and not session.get("provider_final"):
                 event["status"] = "waiting_provider"
             elif interview.status not in {"completed", "incomplete"} or not interview.consent_confirmed or not interview.turns:

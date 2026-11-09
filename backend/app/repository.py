@@ -60,7 +60,7 @@ class Repository:
                 raise AppError("NOT_FOUND", "case not found", 404)
             rows = [(row.kind, row.id, json.loads(row.payload)) for row in conn.execute(select(records))]
             if any(kind == "hr_outbox" and value.get("case_id") == case_id and value.get("state") in {"SENDING", "DELIVERY_UNKNOWN"}
-                   or kind == "hr_run" and value.get("case_id") == case_id and value.get("state") == "running" for kind, _, value in rows):
+                   or kind in {"hr_run", "hr_preparation"} and value.get("case_id") == case_id and value.get("state") == "running" for kind, _, value in rows):
                 raise AppError("CASE_BUSY", "Finish or reconcile HR processing and emails before deleting this case", 409)
             sessions = {id: value for kind, id, value in rows if kind == "session" and value.get("case_id") == case_id}
             if any(kind == "stage_run" and id.startswith(case_id + ":") and value.get("status") == "running"

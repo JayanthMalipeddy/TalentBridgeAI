@@ -21,5 +21,7 @@ def calculate(rubric, findings: Findings, interview, threshold):
         denominator=sum(Decimal(str(r['criterion']['weight']))*4 for r in rows)
         exact=100*numerator/denominator
     recommendation='insufficient_evidence' if exact is None else 'recommend_shortlist' if exact>=Decimal(str(threshold)) else 'below_threshold'
+    band='insufficient_evidence' if exact is None else 'meets_threshold' if exact>=Decimal(str(threshold)) else 'near_threshold' if exact>=Decimal(str(threshold))-10 else 'below_threshold'
     return {'criteria':rows,'score':float(exact) if exact is not None else None,'unrounded_score':str(exact) if exact is not None else None,'threshold':threshold,'recommendation':recommendation,
-            'explanation':'Insufficient evidence — HR review required.' if exact is None else 'Performance against the reviewed rubric, not a probability of job success.'}
+            'review_band':band,'human_decision_required':True,
+            'explanation':'Insufficient evidence — HR review required.' if exact is None else 'Performance against the rubric. HR must review the answer evidence and confirm the final decision.'}

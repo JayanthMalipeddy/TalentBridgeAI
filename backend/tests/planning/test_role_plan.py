@@ -31,6 +31,16 @@ async def test_other_role_rejects_invented_evidence():
     assert error.value.code=='PLAN_EVIDENCE'
 
 
+async def test_actual_response_schema_constrains_section_ids_for_bounded_repair():
+    from pydantic import ValidationError
+    case,ctx,result=setup()
+    await build_plan(case,ctx)
+    schema=ctx.llm.generate_structured.call_args.args[3]
+    assert schema.model_validate(result.model_dump()).questions[0].source_ids==['jd-1','cv-2']
+    bad=result.model_dump();bad['questions'][0]['source_ids']=['invented-source']
+    with pytest.raises(ValidationError):schema.model_validate(bad)
+
+
 async def test_original_question_gets_source_text_without_model_copying_quotes():
     case,ctx,_=setup()
     plan=await build_plan(case,ctx)
@@ -58,3 +68,10 @@ def test_section_offsets_preserve_unicode_whitespace_and_long_documents():
         assert source[start:end]==ref.excerpt
         assert end<=12000
         assert len(ref.excerpt)<=600
+
+
+async def test_unreadable_jd_prefix_fails_before_any_provider_request():
+    case,ctx,_=setup();case.job_description=' '*12000+'Job requirements outside the input bound'
+    with pytest.raises(AppError) as error:await build_plan(case,ctx)
+    assert error.value.code=='ROLE_REQUIREMENTS'
+    ctx.llm.generate_structured.assert_not_awaited()

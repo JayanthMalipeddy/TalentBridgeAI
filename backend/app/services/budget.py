@@ -22,7 +22,7 @@ class BudgetService:
         with self.repository.transaction() as conn:
             used = conn.execute(select(func.coalesce(func.sum(usage.c.amount), 0)).where(usage.c.provider == provider, usage.c.unit == unit)).scalar_one()
             if used + amount > limit:
-                raise AppError("BUDGET_EXCEEDED", f"Budget exhausted for {provider}/{unit}", 429)
+                raise AppError("BUDGET_EXCEEDED", f"Budget exhausted for {provider}/{unit}: local limit {limit:g}, recorded usage {used:g}, next reservation {amount:g}. Review usage and configured limits; restart the backend after environment changes.", 429)
             id = str(uuid4())
             conn.execute(usage.insert().values(id=id, provider=provider, unit=unit, amount=amount, state="reserved", details="{}"))
             return id

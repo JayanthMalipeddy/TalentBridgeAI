@@ -65,3 +65,6 @@ HR-confirmed client submission and candidate notifications are implemented throu
 Recruitment cases expose **My interviews ? HR review and emails**. Review the rubric and answer evidence, confirm recipients and CV sharing, connect Gmail, and explicitly approve shortlist, rejection or hold. The older report approval does not send email. [Setup, scoring, recovery and mocked verification](docs/hr-gmail-workflow.md).
 
 The shared design covers landing, workspace, forms, voice controls, transcripts, reports and HR review, using the supplied TalentBridge AI logo. [Desktop full page](docs/design/screenshots/landing-1440.png), [mobile full page](docs/design/screenshots/landing-390.png), [HR desktop](docs/design/screenshots/hr-review-1440.png), [HR mobile](docs/design/screenshots/hr-review-390.png). Private workflow screenshots use explicitly labelled fictional test data.
+
+
+Latest workflow verification: [complete recruitment audit](docs/workflow-audit.md), including scenario coverage, the single assessment/report path, email ordering and live-provider limitations. New HR reports require the HR email decision, not legacy report approval.
