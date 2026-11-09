@@ -41,6 +41,10 @@ async def parse_cv(file_bytes: bytes, filename: str, ctx: AgentContext) -> str:
 
 
 async def build_plan(case: CaseInput, ctx: AgentContext) -> InterviewPlan:
+    if "integration" not in case.role.casefold():
+        _ensure_not_frozen(case, ctx)
+        from .role_plan import build_role_plan
+        return await build_role_plan(case, ctx)
     return await plan_case(case, ctx)
 
 

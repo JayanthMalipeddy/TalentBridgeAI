@@ -26,6 +26,7 @@ export function Workspace() {
     [error, setError] = useState("");
   const [mode, setMode] = useState<Mode>("recruitment"),
     [chosen, setChosen] = useState(location.pathname !== "/app");
+  const [role, setRole] = useState("");
   const [cv, setCv] = useState(""),
     [jd, setJd] = useState(""),
     [file, setFile] = useState<File | null>(null);
@@ -131,8 +132,8 @@ export function Workspace() {
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if ((!file && !cv.trim()) || !jd.trim()) {
-      setError("Add a CV and job description before continuing.");
+    if ((!file && !cv.trim()) || !jd.trim() || !role.trim()) {
+      setError("Add a CV and job description, and enter the role before continuing.");
       return;
     }
     await run(async () => {
@@ -141,7 +142,7 @@ export function Workspace() {
       if (!current) {
         const body = new FormData();
         body.set("mode", mode);
-        body.set("role", "Integration Engineer");
+        body.set("role", role.trim());
         body.set("job_description", jd);
         if (file) body.set("cv_file", file);
         else body.set("cv_text", cv);
@@ -415,7 +416,7 @@ export function Workspace() {
                   </label>
                   <label>
                     Role
-                    <input value="Integration Engineer" readOnly />
+                    <input value={active?.role ?? role} maxLength={200} disabled={!!active} onChange={e=>setRole(e.target.value)} placeholder="Enter the job title" />
                   </label>
                 </div>
                 <label
@@ -488,6 +489,7 @@ export function Workspace() {
                     disabled={!!active}
                     onClick={() => {
                       setFile(null);
+                      setRole("Integration Engineer");
                       setCv(
                         "Fictional sample: Alex Morgan, Integration Engineer. Three years building REST APIs, webhook integrations and retry queues. Experience with Python, SQL and monitoring.",
                       );

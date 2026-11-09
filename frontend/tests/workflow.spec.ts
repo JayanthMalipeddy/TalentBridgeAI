@@ -344,3 +344,13 @@ test("plan quota failure is shown beside the submit button", async ({page}) => {
   await expect(page.getByRole("button", {name:"Create interview plan"})).toBeEnabled();
   await expect(page.getByLabel("Or paste CV text")).toHaveValue(/Fictional sample/);
 });
+
+test("new interview sends the entered role instead of a fixed title", async ({page}) => {
+  await fixture(page);
+  await page.goto('/app/new');
+  await page.getByRole('button',{name:'Use fictional sample'}).click();
+  await page.getByLabel('Role',{exact:true}).fill('Accountant');
+  const submitted=page.waitForRequest(r=>r.url().endsWith('/api/cases')&&r.method()==='POST');
+  await page.getByRole('button',{name:'Create interview plan'}).click();
+  expect((await submitted).postData()).toContain('Accountant');
+});

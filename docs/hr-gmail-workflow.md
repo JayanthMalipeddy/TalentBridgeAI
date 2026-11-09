@@ -57,3 +57,5 @@ Backend tests create isolated databases and inject mocked Gmail transport. They 
 Remaining connection work: supply Google OAuth credentials and encryption key, authorize the sender, then deliberately enable production sending only when ready. Live Gmail delivery and live HR assessment on a real candidate were not exercised in this task.
 
 Update verification: 32 isolated HR/backend tests, 8 frontend unit tests and 2 HR browser checks passed; production frontend build passed. Tests used mocked providers only. No live call or email was initiated for this change.
+
+Role selection: New interview now accepts an editable job title. Integration roles retain the existing curated-catalogue path. Other roles use five LLM questions grounded in exact JD/CV excerpts, with an explicit warning that no approved role-specific library was used. No unrelated Integration Engineer skills are substituted. Provisional foundation assessments retain their existing abstention behavior; the HR workflow uses its separately frozen LLM rubric and final human decision.
