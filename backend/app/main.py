@@ -25,6 +25,8 @@ from .agents.interview.router import router
 from .agents.interview.service import create_session, expire_sessions, voice_available
 from .agents.planning.agent import parse_cv
 from .agents.interview import phone
+from .hr.router import router as hr_router
+from .hr.worker import tick as hr_tick
 from .workflow import create_workflow, AGENTS_AVAILABLE, process_completion_events
 
 class SessionRequest(BaseModel):
@@ -62,11 +64,22 @@ def create_app(settings: Settings | None = None):
                 except Exception:
                     logging.getLogger("talentbridge.interview").error("completion_worker_failed")
                 await asyncio.sleep(15)
+        async def hr_worker():
+            while True:
+                try:
+                    await hr_tick(app.state.ctx)
+                except Exception:
+                    logging.getLogger("talentbridge.hr").error("hr_worker_failed")
+                await asyncio.sleep(5)
+        hr_task = asyncio.create_task(hr_worker())
         worker = asyncio.create_task(phone_worker())
         sweeper = asyncio.create_task(sweep())
         try:
             yield
         finally:
+            hr_task.cancel()
+            try: await hr_task
+            except asyncio.CancelledError: pass
             worker.cancel()
             try: await worker
             except asyncio.CancelledError: pass
@@ -76,7 +89,7 @@ def create_app(settings: Settings | None = None):
             await asyncio.to_thread(telemetry.flush)
             repo.engine.dispose()
     app = FastAPI(title="TalentBridge AI Foundation", version="1.0", lifespan=lifespan)
-    app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.frontend_origin.split(",")], allow_methods=["GET", "POST"], allow_credentials=True, allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Recruiter-Token"])
+    app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.frontend_origin.split(",")], allow_methods=["GET", "POST", "DELETE"], allow_credentials=True, allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Recruiter-Token"])
 
     @app.exception_handler(AppError)
     async def app_error(request, exc):
@@ -148,6 +161,9 @@ def create_app(settings: Settings | None = None):
             raise AppError("CV_TOO_LARGE", "CV exceeds MAX_CV_BYTES", 413)
         case = CaseInput(case_id=str(uuid4()), mode=mode, role=role, cv_text=cv_text, job_description=job_description)
         ctx.repository.save_case(case, owner(request), settings.guest_max_cases)
+        if mode == "recruitment":
+            from .hr.service import HRService
+            HRService(ctx).attachment(case.case_id, cv_file.filename if cv_file else "candidate_cv.txt", content if cv_file else cv_text.encode("utf-8"))
         return case
 
     @app.get("/api/cases", dependencies=[Depends(owner)])
@@ -158,6 +174,11 @@ def create_app(settings: Settings | None = None):
     def case(case_id: str, request: Request):
         repo = request.app.state.ctx.repository
         return {"case": repo.get_case(case_id), **repo.get("status", case_id)}
+
+    @app.delete("/api/cases/{case_id}", dependencies=[Depends(owned_case)], status_code=204)
+    def delete_case(case_id: str, request: Request):
+        request.app.state.ctx.repository.delete_case(case_id, owner(request))
+        return Response(status_code=204)
 
     async def run_stage(case_id, stage, request):
         request.app.state.ctx.repository.get_case(case_id)
@@ -244,6 +265,7 @@ def create_app(settings: Settings | None = None):
     def get_usage(request: Request):
         return request.app.state.ctx.repository.usage_records()
 
+    app.include_router(hr_router, prefix="/api/hr", tags=["HR review and Gmail"])
     app.include_router(router, prefix="/api/interviews", tags=["interviews"])
     return app
 

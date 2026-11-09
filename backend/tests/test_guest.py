@@ -100,3 +100,55 @@ def test_legacy_admin_cannot_read_mock_assessment(client, auth, contracts):
     repo.save_case(case)
     response = client.get(f'/api/cases/{case.case_id}/assessment', headers=auth)
     assert response.status_code == 403
+
+
+def test_twenty_cases_and_delete_frees_capacity(client):
+    _, headers = guest(client)
+    cases = [create(client, headers) for _ in range(20)]
+    body = {'mode':'mock','role':'Engineer','cv_text':'CV','job_description':'JD'}
+    assert client.post('/api/cases', headers=headers, data=body).status_code == 429
+    assert client.delete(f'/api/cases/{cases[0]}', headers=headers).status_code == 204
+    assert len(client.get('/api/cases').json()) == 19
+    assert client.get(f'/api/cases/{cases[0]}').status_code == 404
+    create(client, headers)
+    assert len(client.get('/api/cases').json()) == 20
+
+
+def test_delete_requires_owner_and_csrf(client, auth):
+    _, headers = guest(client)
+    case_id = create(client, headers)
+    assert client.delete(f'/api/cases/{case_id}', headers=ORIGIN).status_code == 403
+    assert client.delete(f'/api/cases/{case_id}', headers=headers | {'Origin':'https://evil.invalid'}).status_code == 403
+    assert client.delete(f'/api/cases/{case_id}', headers=auth).status_code == 404
+    client.cookies.clear()
+    _, other_headers = guest(client)
+    assert client.delete(f'/api/cases/{case_id}', headers=other_headers).status_code == 404
+    response = client.options('/api/cases/' + case_id, headers=ORIGIN | {'Access-Control-Request-Method':'DELETE','Access-Control-Request-Headers':'X-CSRF-Token'})
+    assert response.status_code == 200
+
+
+def test_delete_removes_associated_records_and_blocks_busy_case(client):
+    _, headers = guest(client)
+    case_id = create(client, headers)
+    other = create(client, headers)
+    repo = client.app.state.ctx.repository
+    for kind in ('plan','assessment','report','approval','mock_owner','interview'):
+        repo.put(kind, case_id, {'case_id':case_id})
+    for kind in ('session','interview_session','workflow_event'):
+        repo.put(kind, 'delete-session', {'case_id':case_id,'session_id':'delete-session','state':'completed'})
+    repo.put('report_version', case_id + ':v1', {'case_id':case_id})
+    repo.put('stage_run', case_id + ':plan', {'status':'running'})
+    assert client.delete('/api/cases/' + case_id, headers=headers).status_code == 409
+    repo.put('stage_run', case_id + ':plan', {'status':'succeeded'})
+    repo.put('session', 'delete-session', {'case_id':case_id,'voice_issued':True,'provider_final':False})
+    assert client.delete('/api/cases/' + case_id, headers=headers).status_code == 409
+    repo.put('session', 'delete-session', {'case_id':case_id,'state':'processing'})
+    assert client.delete('/api/cases/' + case_id, headers=headers).status_code == 409
+    repo.put('session', 'delete-session', {'case_id':case_id,'state':'completed'})
+    assert client.delete('/api/cases/' + case_id, headers=headers).status_code == 204
+    for kind in ('case','case_owner','status','plan','assessment','report','approval','mock_owner','interview','session','interview_session','workflow_event','report_version','stage_run'):
+        assert all(id not in {case_id, 'delete-session', case_id + ':v1', case_id + ':plan'} for id, _ in repo.all_records(kind))
+    repo.put('workflow_event', 'delete-session', {'case_id':case_id,'status':'failed'})
+    assert repo.all_records('workflow_event') == []
+    assert client.get('/api/cases/' + other).status_code == 200
+    assert client.delete('/api/cases/' + case_id, headers=headers).status_code == 404

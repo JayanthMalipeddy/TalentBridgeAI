@@ -1,0 +1,4 @@
+# Design
+Existing forest/teal identity with sage and slate-tinted full-height surfaces; continue it through all routes. Landing is a persuasion surface; workspace and HR review are operational surfaces used at desks and on mobile in normal ambient light. Preserve the existing imagery and layout. HR work uses readable headings, grouped fields, visible state, exact-recipient previews and evidence before decisions. Use theme.css tokens, a 16px surface radius, 44px minimum controls, strong keyboard focus and reduced motion. Do not let decoration compete with transcripts. Private screenshots use labelled test fixtures.
+
+Applied Impeccable 4.8.1 guidance from https://github.com/pbakaus/impeccable: polish, craft-floor and established-world extension. Remote skill launcher unavailable; source guidance and existing implementation used directly.

@@ -64,6 +64,7 @@ def create_workflow(ctx: AgentContext):
             fingerprint = digest(payload)
             receipt_id = case_id + ":" + stage
             with repo.transaction() as conn:
+                repo._get(conn, "case", case_id)  # Serialize stage claims with case deletion.
                 raw = conn.execute(select(records.c.payload).where(records.c.kind == "stage_run", records.c.id == receipt_id)).scalar_one_or_none()
                 previous = json.loads(raw) if raw else None
                 if previous and previous["status"] == "running":

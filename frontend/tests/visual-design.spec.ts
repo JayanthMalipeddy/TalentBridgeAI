@@ -1,4 +1,5 @@
-﻿import {test, expect, type Page} from '@playwright/test';
+import {completeRecruitmentSetup} from './recruitment-setup';
+import {test, expect, type Page} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
 const sample={case_id:'visual-only',mode:'recruitment',role:'Integration Engineer',cv_text:'Fictional visual-test profile',job_description:'API integration and troubleshooting'};
 const evidence={source_type:'transcript',source_id:'test-turn',locator:'test-turn',excerpt:'Fictional visual test: I use an idempotency key and bounded retries to avoid duplicate requests.'};
@@ -67,6 +68,7 @@ for(const width of [1440,390])test('phone controls and browser voice consent '+w
  await page.getByRole('button',{name:/Use fictional sample/}).click();
  await page.getByRole('button',{name:/Create interview plan/}).click();
  await page.getByRole('button',{name:'Continue to interview'}).click();
+ await completeRecruitmentSetup(page);
  await expect(page.getByRole('button',{name:'Call candidate now'})).toBeDisabled();
  await page.getByLabel('Candidate phone number').fill('+12025550123');
  await page.getByLabel('Recruiter authorization').fill('test-only-not-a-secret');

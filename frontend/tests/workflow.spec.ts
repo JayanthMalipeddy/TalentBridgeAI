@@ -1,3 +1,4 @@
+import {completeRecruitmentSetup} from './recruitment-setup';
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
@@ -14,6 +15,35 @@ const example = {
   cv_text: "Fictional Alex CV",
   job_description: "Fictional role",
 };
+
+test("delete interview confirms, handles failure, and removes the row", async ({page}) => {
+  await fixture(page);
+  let attempts = 0;
+  await page.route('**/api/cases/fictional-case', async route => {
+    if (route.request().method() !== 'DELETE') return route.fallback();
+    attempts++;
+    expect(route.request().headers()['x-csrf-token']).toBe('fixture-csrf');
+    if (attempts === 1) return route.fulfill({status:409,json:{error:{code:'CASE_BUSY',message:'Wait for processing to finish before deleting this interview.'}}});
+    return route.fulfill({status:204});
+  });
+  await page.goto('/app/interviews');
+  await expect(page.getByText('Save up to 20 interviews.', {exact:false})).toBeVisible();
+  const remove = page.getByRole('button', {name:'Delete interview Integration Engineer'});
+  await expect(remove).toBeEnabled();
+  page.once('dialog', dialog => dialog.dismiss());
+  await remove.click();
+  expect(attempts).toBe(0);
+  await expect(remove).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await remove.click();
+  await expect(page.getByRole('alert')).toContainText('Wait for processing');
+  await expect(remove).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await remove.click();
+  await expect(remove).toHaveCount(0);
+  await expect(page.getByText('No interviews to show.', {exact:false})).toBeVisible();
+  expect(attempts).toBe(2);
+});
 const report = {
   case_id: example.case_id,
   report_version: "fixture-version-7",
@@ -208,6 +238,7 @@ test("validation, failure recovery, plan and honest interview state", async ({
     page.getByRole("heading", { name: "Integration Engineer", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Continue to interview" }).click();
+  await completeRecruitmentSetup(page);
   await page.getByRole("button", { name: "Use text or browser interview instead" }).click();
   await expect(page.getByRole("button", { name: "Start text interview" })).toBeEnabled();
   await page

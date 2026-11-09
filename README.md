@@ -57,4 +57,11 @@ See [validation](docs/validation.md) and [actual synthetic live-provider artifac
 
 Read [contracts](docs/contracts.md), [ownership](docs/ownership.md), [release status](docs/PROJECT_STATUS.md), and [Jayanth's integration handoff](docs/jayanth-handoff.md). Module notes: [Priya](docs/priya-handoff.md), [Gana](docs/gana-handoff.md), [Drashti](docs/drashti-handoff.md).
 
-No automatic email, submission, paid overage, or silent provider fallback is implemented. Phone interviews require recruiter authorization and an explicitly configured outbound number. Failed billable stages require explicit retry; uncertain interrupted stages require operator reconciliation via `scripts/recover_stage.py`. Preserve the database and Chroma path across restarts.
+HR-confirmed client submission and candidate notifications are implemented through a durable Gmail outbox; real sending is disabled by default and blocked outside production. See [HR review and Gmail setup](docs/hr-gmail-workflow.md). No paid overage or silent provider fallback is implemented. Phone interviews require recruiter authorization and an explicitly configured outbound number. Failed billable stages require explicit retry; uncertain interrupted stages require operator reconciliation via `scripts/recover_stage.py`. Preserve the database and Chroma path across restarts.
+
+
+## HR review and updated visual design
+
+Recruitment cases expose **My interviews ? HR review and emails**. Review the rubric and answer evidence, confirm recipients and CV sharing, connect Gmail, and explicitly approve shortlist, rejection or hold. The older report approval does not send email. [Setup, scoring, recovery and mocked verification](docs/hr-gmail-workflow.md).
+
+The shared design covers landing, workspace, forms, voice controls, transcripts, reports and HR review, using the supplied TalentBridge AI logo. [Desktop full page](docs/design/screenshots/landing-1440.png), [mobile full page](docs/design/screenshots/landing-390.png), [HR desktop](docs/design/screenshots/hr-review-1440.png), [HR mobile](docs/design/screenshots/hr-review-390.png). Private workflow screenshots use explicitly labelled fictional test data.

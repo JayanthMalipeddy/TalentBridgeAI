@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     session_max_duration_seconds: int = Field(default=480, ge=60, le=480)
     guest_ttl_seconds: int = Field(default=86400, ge=60, le=604800)
     guest_max_workspaces: int = Field(default=100, ge=1)
-    guest_max_cases: int = Field(default=5, ge=1)
+    guest_max_cases: int = Field(default=20, ge=1)
     guest_max_operations: int = Field(default=30, ge=1)
     workflow_auto_process: bool = False
     planning_max_cv_pages: int = Field(default=10, ge=1, le=50)
@@ -48,6 +48,15 @@ class Settings(BaseSettings):
     planning_llamaparse_tier: str = ""
     llm_max_completion_tokens: int = Field(default=4096, ge=256, le=8192)
     interview_followups_enabled: bool = True
+    gmail_client_id: str = ""
+    gmail_client_secret: SecretStr = SecretStr("")
+    gmail_redirect_uri: str = "http://localhost:5173/api/hr/gmail/callback"
+    gmail_token_encryption_key: SecretStr = SecretStr("")
+    email_send_enabled: bool = False
+    email_daily_cap: int = Field(default=10, ge=1, le=100)
+    email_pacing_seconds: int = Field(default=30, ge=0, le=3600)
+    email_max_attempts: int = Field(default=3, ge=1, le=5)
+    email_send_lease_seconds: int = Field(default=180, ge=120)
     max_cv_bytes: int = Field(default=1000000, gt=0)
 
     @field_validator("session_max_duration_seconds", mode="before")

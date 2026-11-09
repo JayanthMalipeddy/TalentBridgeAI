@@ -6,10 +6,14 @@ import { ApiError, openWorkspace, request } from "./api";
 import type { Assessment, Case, Mode, Plan, Report } from "./contracts";
 import { InterviewPage } from "./features/interview/InterviewPage";
 import {PhoneInterview} from "./features/interview/PhoneInterview";
+import {RecruitmentSetup} from "./RecruitmentSetup";
+import {HRReview} from "./HRReview";
 import {ServiceStatus} from "./ServiceStatus";
 const steps = ["Details", "Interview plan", "Interview", "Results"];
 export function Workspace() {
   const stagePanel = useRef<HTMLElement|null>(null);
+  const [recruitmentReadyFor,setRecruitmentReadyFor] = useState<string|null>(null);
+  const [hrCaseId,setHrCaseId] = useState<string|null>(null);
   const [operation, setOperation] = useState("");
   const [usePhone, setUsePhone] = useState(true);
   const [voiceAvailable, setVoiceAvailable] = useState(false);
@@ -221,7 +225,8 @@ export function Workspace() {
                 </label>
               ))}
             </fieldset>
-            {notice}
+            {active?.mode === "recruitment" && page === "new" && <button className="secondary" onClick={()=>{setHrCaseId(active.case_id);setPage("hr");}}>HR review and emails</button>}
+          {notice}
             <button
               disabled={!ready || loading}
               onClick={() => setChosen(true)}
@@ -283,7 +288,7 @@ export function Workspace() {
           <div>
             <p className="eyebrow">TALENTBRIDGE AI / {active?.mode || mode}</p>
             <h1>
-              {page === "new"
+              {page === "hr" ? "HR review and communications" : page === "new"
                 ? "A better conversation starts here."
                 : page === "status"
                   ? "Services and usage"
@@ -299,13 +304,14 @@ export function Workspace() {
           </span>
         </header>
         {notice}
-        {page === "status" ? <ServiceStatus/> : page !== "new" ? (
+        {page === "hr" && hrCaseId ? <HRReview key={hrCaseId} caseId={hrCaseId}/> : page === "status" ? <ServiceStatus/> : page !== "new" ? (
           <section className="panel">
             <h2>
               {page === "reports"
                 ? "Reports for your interviews"
                 : "Your interviews"}
             </h2>
+            {page === "interviews" && <p>Save up to 20 interviews. Delete an interview to free a space.</p>}
             {cases.length === 0 ? (
               <p>No interviews to show. Create an interview to get started.</p>
             ) : (
@@ -357,6 +363,21 @@ export function Workspace() {
                   >
                     Open {page === "reports" ? "report" : "case"}
                   </button>
+                  {c.mode === "recruitment" && <button type="button" className="secondary" onClick={()=>{setHrCaseId(c.case_id);setPage("hr");}}>HR review and emails</button>}
+                  <button type="button" className="secondary" disabled={!ready || loading}
+                    aria-label={`Delete interview ${c.role}`}
+                    onClick={() => {
+                      if (!window.confirm("Delete this interview and its saved CV, answers and reports from this workspace? This cannot be undone. Any copies held by the voice provider are not deleted.")) return;
+                      void run(async () => {
+                        await request("/cases/" + c.case_id, "DELETE");
+                        setCases(previous => previous.filter(item => item.case_id !== c.case_id));
+                        if (active?.case_id === c.case_id) {
+                          setActive(null); setPlan(null); setAssessment(null); setReport(null);
+                          setInvitation(null); setInterviewDone(false); setLastStage(null);
+                          setCv(""); setJd(""); setFile(null); setStage(0);
+                        }
+                      });
+                    }}>Delete</button>
                 </div>
               ))
             )}
@@ -511,7 +532,7 @@ export function Workspace() {
               <section className="panel" ref={stagePanel} tabIndex={-1}>
                 <p className="eyebrow">03 / INTERVIEW</p>
                 <h2>Your interview</h2>
-                {active?.mode === "recruitment" && usePhone ? <>
+                {active?.mode === "recruitment" && recruitmentReadyFor !== active.case_id ? <RecruitmentSetup key={active.case_id} caseId={active.case_id} onReady={()=>setRecruitmentReadyFor(active.case_id)}/> : active?.mode === "recruitment" && usePhone ? <>
                   <PhoneInterview key={active.case_id} caseId={active.case_id} onResults={(a,r)=>{setAssessment(a);setReport(r);setStage(3);}} />
                   <button className="secondary" onClick={()=>setUsePhone(false)}>Use text or browser interview instead</button>
                 </> : <>
@@ -558,6 +579,7 @@ export function Workspace() {
             )}
             {stage === 3 && (
               <section className="panel" ref={stagePanel} tabIndex={-1}>
+                {active?.mode === "recruitment" && <button onClick={()=>{setHrCaseId(active.case_id);setPage("hr");}}>Review assessment and approve emails</button>}
                 {assessment && (
                   <>
                     <h2>Assessment</h2>

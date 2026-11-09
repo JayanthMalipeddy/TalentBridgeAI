@@ -51,6 +51,34 @@ class Repository:
     def get_case(self, id):
         return CaseInput.model_validate(self.get("case", id))
 
+    def delete_case(self, case_id, workspace_id):
+        """Atomically remove local case data and revoke all candidate sessions."""
+        with self.transaction() as conn:
+            self._get(conn, "case", case_id)
+            raw = conn.execute(select(records.c.payload).where(records.c.kind == "case_owner", records.c.id == case_id)).scalar_one_or_none()
+            if (json.loads(raw)["workspace_id"] if raw else None) != workspace_id:
+                raise AppError("NOT_FOUND", "case not found", 404)
+            rows = [(row.kind, row.id, json.loads(row.payload)) for row in conn.execute(select(records))]
+            if any(kind == "hr_outbox" and value.get("case_id") == case_id and value.get("state") in {"SENDING", "DELIVERY_UNKNOWN"}
+                   or kind == "hr_run" and value.get("case_id") == case_id and value.get("state") == "running" for kind, _, value in rows):
+                raise AppError("CASE_BUSY", "Finish or reconcile HR processing and emails before deleting this case", 409)
+            sessions = {id: value for kind, id, value in rows if kind == "session" and value.get("case_id") == case_id}
+            if any(kind == "stage_run" and id.startswith(case_id + ":") and value.get("status") == "running"
+                   for kind, id, value in rows):
+                raise AppError("CASE_BUSY", "Wait for processing to finish before deleting this interview.", 409)
+            if any(s.get("state") == "processing" or (s.get("voice_issued") and not s.get("provider_final") and s.get("call_state") != "failed") for s in sessions.values()):
+                raise AppError("CASE_BUSY", "Finish or reconcile the active interview before deleting it.", 409)
+            if any(kind == "voice_slot" and value.get("session_id") in sessions for kind, _, value in rows):
+                raise AppError("CASE_BUSY", "Reconcile the reserved voice session before deleting this interview.", 409)
+            case_kinds = {"case", "case_owner", "status", "plan", "interview", "assessment", "report", "approval", "mock_owner"}
+            for kind, id, value in rows:
+                belongs = (kind.startswith("hr_") and value.get("case_id") == case_id
+                           or kind in case_kinds and id == case_id
+                           or kind in {"stage_run", "report_version"} and id.startswith(case_id + ":")
+                           or kind in {"session", "interview_session", "workflow_event"} and (id in sessions or value.get("case_id") == case_id))
+                if belongs:
+                    conn.execute(delete(records).where(records.c.kind == kind, records.c.id == id))
+
     def list_cases(self, workspace_id=None):
         with self.engine.connect() as conn:
             rows = conn.execute(select(records.c.payload).where(records.c.kind == "case")).scalars()
@@ -220,7 +248,11 @@ class Repository:
             return [(row.id, json.loads(row.payload)) for row in conn.execute(select(records).where(records.c.kind == kind))]
 
     def put(self, kind, id, value):
-        with self.transaction() as conn: self._put(conn, kind, id, value)
+        with self.transaction() as conn:
+            # A worker may finish handling an event after its case was deleted.
+            if kind == "workflow_event" and not conn.execute(select(records.c.id).where(records.c.kind == "case", records.c.id == value["case_id"])).first():
+                return
+            self._put(conn, kind, id, value)
 
     def save_stage_result(self, stage, value, receipt_id, fingerprint, expected_interview):
         with self.transaction() as conn:
