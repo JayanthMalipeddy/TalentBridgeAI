@@ -3,9 +3,28 @@ name = "talentbridge-foundation"
 version = "0.1.0"
 requires-python = ">=3.11,<3.12"
 dependencies = [
-  "fastapi==0.162.0", "uvicorn==0.54.0", "pydantic==2.14.3", "pydantic-settings==2.16.2", "python-multipart==0.0.33",
-  "sqlalchemy==2.1.8", "httpx==0.28.1", "langgraph==1.2.20", "chromadb==1.5.9", "llama-index-core==0.14.25",
-  "llama-index-embeddings-huggingface==0.8.0", "llama-index-vector-stores-chroma==0.6.0", "sentence-transformers==6.2.0",
+  "fastapi==0.162.0",
+  "uvicorn==0.54.0",
+  "pydantic==2.14.3",
+  "pydantic-settings==2.16.2",
+  "python-multipart==0.0.33",
+  "sqlalchemy==2.1.8",
+  "httpx==0.28.1",
+  "langgraph==1.2.20",
+  "chromadb==1.5.9",
+  "llama-index-core==0.14.25",
+  "llama-index-embeddings-huggingface==0.8.0",
+  "llama-index-vector-stores-chroma==0.6.0",
+  "sentence-transformers==6.2.0",
+  "pypdf==7.0.0",
+  "langfuse==5.2.0",
+  "cryptography==50.0.2",
+  "email-validator==2.3.0",
+]
+
+[project.optional-dependencies]
+compression = [
+    "llmlingua==0.2.2",
 ]
 
 [dependency-groups]

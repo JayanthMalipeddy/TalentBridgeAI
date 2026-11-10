@@ -9,13 +9,13 @@ type Session = {
   question_number:number; plan_version:string; voice_pending:boolean;
   result: {status:string; turns:Turn[]; duration_seconds:number} | null;
 };
-export type InterviewPageProps = {sessionId:string; candidateToken:string};
+export type InterviewPageProps = {sessionId:string; candidateToken:string; onCompleted?:()=>void};
 
 export function InterviewPage(props:InterviewPageProps) {
   return <ConversationProvider><Interview {...props}/></ConversationProvider>;
 }
 
-function Interview({sessionId, candidateToken}:InterviewPageProps) {
+function Interview({sessionId, candidateToken, onCompleted}:InterviewPageProps) {
   const [session, setSession] = useState<Session|null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -45,6 +45,7 @@ function Interview({sessionId, candidateToken}:InterviewPageProps) {
     return () => clearInterval(id);
   }, [session?.voice_pending, session?.state, refresh]);
   const terminal = session && ['completed','incomplete','declined'].includes(session.state);
+  useEffect(() => { if (session?.state === 'completed') onCompleted?.(); }, [session?.state, onCompleted]);
   const remaining = session?.deadline ? Math.max(0, Math.ceil((Date.parse(session.deadline)-clock)/1000)) : null;
   useEffect(() => {
     if (remaining !== 0 || ended.current || !session || terminal) return;
@@ -86,7 +87,7 @@ function Interview({sessionId, candidateToken}:InterviewPageProps) {
   async function stop(withdraw:boolean) {
     try {await conversation.endSession();} finally {await action('/stop', {withdraw_consent:withdraw});}
   }
-  return <section className="bg-white rounded-xl p-6 grid gap-4" aria-label="Candidate interview">
+  return <section className="interview-surface grid gap-4" aria-label="Candidate interview">
     <h2 className="text-2xl font-semibold">{session?.channel === 'elevenlabs' ? 'Browser voice interview' : 'Text interview'}</h2>
     <p>English · Integration Engineer · AI interview assistant</p>
     {error && <p role="alert" className="text-red-700">{error}</p>}
@@ -114,7 +115,7 @@ function Interview({sessionId, candidateToken}:InterviewPageProps) {
         <button disabled={busy} className="border rounded p-3" onClick={() => stop(true)}>Withdraw consent</button>
       </div>}
       {session.voice_pending && <p>Waiting for the authoritative provider transcript. A browser disconnect is not proof of completion.</p>}
-      {terminal && <p>{session.state === 'completed' ? 'Interview saved. Assessment and reporting will be available after those modules are integrated.' : session.state === 'declined' ? 'Consent declined or withdrawn. No interview transcript is retained by this application.' : 'Interview saved as incomplete. Missing answers remain unassessed.'}</p>}
+      {terminal && <p>{session.state === 'completed' ? 'Interview saved. Your workspace can now assess the transcript and prepare the report.' : session.state === 'declined' ? 'Consent declined or withdrawn. No interview transcript is retained by this application.' : 'Interview saved as incomplete. Missing answers remain unassessed.'}</p>}
       {session.warnings.map((w,i) => <p className="text-sm text-amber-800" key={i}>{w}</p>)}
     </>}
   </section>;

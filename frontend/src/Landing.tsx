@@ -1,9 +1,7 @@
 export function Brand() {
   return (
     <a className="brand" href="/">
-      <span className="symbol" aria-hidden="true">
-        tb
-      </span>
+      <img className="brand-logo" src="/talentbridgeai-logo.jpeg" alt="" width="64" height="64" />
       TalentBridge <b>AI</b>
     </a>
   );

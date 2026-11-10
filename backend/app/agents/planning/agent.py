@@ -36,11 +36,15 @@ MAX_DOC_CHARS = 12000
 
 
 async def parse_cv(file_bytes: bytes, filename: str, ctx: AgentContext) -> str:
-    config = load_config()
+    config = load_config(ctx.settings)
     return await parser.parse(file_bytes, filename, ctx, config.max_cv_pages, config.llamaparse_tier)
 
 
 async def build_plan(case: CaseInput, ctx: AgentContext) -> InterviewPlan:
+    if "integration" not in case.role.casefold():
+        _ensure_not_frozen(case, ctx)
+        from .role_plan import build_role_plan
+        return await build_role_plan(case, ctx)
     return await plan_case(case, ctx)
 
 
@@ -71,7 +75,7 @@ def _generic_question(name: str) -> str:
 
 async def plan_case(case: CaseInput, ctx: AgentContext, *, config: PlanningConfig | None = None,
                     retriever=None, research: WebResearch | None = None) -> InterviewPlan:
-    config = config or load_config()
+    config = config or load_config(ctx.settings)
     _ensure_not_frozen(case, ctx)
     library = load_library(config.knowledge_dir)
     allowed = allowed_statuses(config.allow_pending_review)

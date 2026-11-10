@@ -1,0 +1,2 @@
+# Product
+TalentBridge AI serves recruiters reviewing Integration Engineer interviews and candidates practising privately. Preserve the existing CV/JD, voice, transcript and report flows. The HR extension adds reviewed rubrics, versioned decisions and Gmail communications; AI never makes a final employment decision. Real sending stays disabled during development and testing. No fictional outputs in live UI.

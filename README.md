@@ -1,88 +1,73 @@
-# TalentBridge AI — shared foundation
+# TalentBridge AI
 
-Stage-one integration foundation using Python 3.11, FastAPI, Pydantic v2, SQLAlchemy/SQLite, LangGraph, persistent Chroma, LlamaIndex/local Sentence Transformers and React/TypeScript/Vite/Tailwind.
+Integrated recruitment and mock-interview prototype: Python 3.11, FastAPI/Pydantic v2, LangGraph, SQLite/SQLAlchemy, persistent Chroma with LlamaIndex/local embeddings, Groq, and React/TypeScript/Vite/Tailwind.
 
-The repository was empty when inspected. GitHub repository metadata identifies `main` as its default branch; no branch refs or commits existed. Work is on `feat/platform-assessment`.
+Priya's planning/RAG, Gana's text/browser interview integration, Drashti's frontend/reporting, and Jayanth's assessment/workflow are connected. The GitHub default branch is `feat/platform-assessment`; this release is prepared on `feat/release-integration`. Do not assume `main` exists.
 
-Working: emerald landing page, no-signup frontend screens, evidence-preserving reporting/coaching, health/capabilities, recruiter-authenticated case APIs, transactional persistence, expiring case-scoped session issuance, exact-version approval, budgets and schema-validated Groq adapter. Planning, interview execution and assessment return `NOT_IMPLEMENTED`. Guest-session endpoints are not implemented yet: the frontend shows an explicit session-service error rather than bypassing authentication. A fresh case cannot yet complete the live interview workflow. See [Drashti's integration handoff](docs/drashti-handoff.md).
-Working: foundation APIs, recruiter authentication, transactional persistence, exact-version approval, budgets, schema-validated Groq adapter, and the integrated text interview. Gana's ZIP has been adapted to the shared repository and contracts; browser ElevenLabs support is gated on explicit configuration and supervision. Planning, assessment and reporting still return `NOT_IMPLEMENTED` pending their implementations. Session issuance requires a saved plan. See [Gana's integration handoff](docs/gana-handoff.md) for the complete API, setup and limitations.
+## What works
 
-## Start on Windows PowerShell
+Upload PDF/DOCX or paste CV text, generate five questions with local retrieval and Groq, conduct a consented text interview, assess exact transcript evidence, and generate an evidence-preserving recruitment report or private mock feedback. Recruitment approval targets an exact version. Reporting is deterministic and does not make another model call. Workspace cookies, CSRF checks and ownership isolate guest cases; recruiter credentials access legacy/operator APIs only.
 
-Prerequisites: Python 3.11 via `uv`, Node 22.12+ (tested with Node 24.18.0).
+The 55 library records currently have **pending human review** status. Default planning excludes them. Explicit `PLANNING_ALLOW_PENDING_REVIEW=true` permits provisional questions/feedback, visibly labelled, with all numerical scores withheld. A teammate must actually review criteria before changing their metadata to approved. Do not label this release's library human-approved.
 
-From the repository root:
+ElevenLabs browser integration exists but live voice is disabled until the account setup, prompt, webhook, supervision and minute allowance pass checks. Recruitment now defaults to an explicitly triggered outbound phone interview; see [phone setup and current blocker](docs/phone-interviews.md). The connected account currently has no phone numbers, so live calling is not yet available. Gemini/Ollama and hosted Langfuse remain explicit unavailable integrations.
+
+## Fresh checkout on Windows
 
 ```powershell
 uv python install 3.11
 uv sync --locked
 Copy-Item .env.example .env
-notepad .env
+npm.cmd --prefix frontend ci
+.\.venv\Scripts\python.exe scripts/download_embeddings.py
+$env:PYTHONPATH = 'backend'
+$env:EMBEDDING_MODEL = '.cache/models/all-MiniLM-L6-v2'
+.\.venv\Scripts\python.exe -m app.agents.planning.index --rebuild
 ```
 
-Set `RECRUITER_API_TOKEN` to a long random secret for the existing operational API routes. The redesigned frontend never requests this secret; it awaits the guest-cookie backend described in the handoff. No AI key is required to start the foundation or generate a report from an existing assessment. Do not commit `.env`.
+Configure local `.env`: `GROQ_API_KEY`, `GROQ_MODEL` (an available JSON-mode model), `EMBEDDING_MODEL=.cache/models/all-MiniLM-L6-v2`, `RECRUITER_API_TOKEN`, and an explicit `PROVIDER_BUDGET_LIMITS` JSON object. Empty budgets deny calls. Example local cap: `{"groq":{"requests":12,"tokens":100000}}`; this is an application cap, not a claim about your provider balance. Configure provisional planning only with the limitations described above. Never commit credentials or candidate data.
 
-Terminal 1, repository root:
+Start both services in hidden processes:
+
+```powershell
+.\scripts\start-local.ps1
+```
+
+Open http://localhost:5173/app. Health: http://127.0.0.1:8000/api/health. OpenAPI: http://127.0.0.1:8000/docs. Use the same hostname for browser sessions. The script starts one backend and frontend; don't run it twice while ports 8000/5173 are occupied. PIDs/logs are in ignored `.cache/release-*` files.
+
+Equivalent foreground commands:
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log
+npm.cmd --prefix frontend run dev
 ```
 
-Terminal 2, repository root:
+## Checks and evidence
 
 ```powershell
-Set-Location frontend
-npm.cmd ci
-npm.cmd run dev
-```
-
-Open http://localhost:5173. Health: http://127.0.0.1:8000/api/health. OpenAPI: http://127.0.0.1:8000/openapi.json; interactive docs: http://127.0.0.1:8000/docs. Keep the single-instance development servers local. If exposing a demo, terminate HTTPS and limit request body size at your proxy. CORS accepts only `FRONTEND_ORIGIN` (comma-separated exact origins).
-
-## Validate
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+.\.venv\Scripts\python.exe -m pytest -q
+npm.cmd --prefix frontend test
+npm.cmd --prefix frontend run test:e2e
 npm.cmd --prefix frontend run build
 ```
 
-`uv.lock` pins the full Python dependency graph and `frontend/package-lock.json` pins npm dependencies. Use locked installs. Tests cover every shared contract, persistence/reopening, report version approval, auth isolation, expiration, CORS, concurrent reservations, bounded schema repair and local retrieval wiring. No live hosted-provider test or production embedding-model quality evaluation is claimed.
+See [validation](docs/validation.md) and [actual synthetic live-provider artifacts](evals/live-integration-results.json). Automated tests mock hosted providers; the separately recorded live smoke exercised real Groq and persistent local retrieval. These are not human-reviewed benchmark results. Never present fixture screenshots as live results.
 
-## Providers and budgets
+## Team handoff
 
-Groq is the default implemented LLM adapter. Configure `GROQ_API_KEY`, a model available to your account supporting JSON mode in `GROQ_MODEL`, and an explicit request allowance, e.g. `PROVIDER_BUDGET_LIMITS={"groq":{"requests":20,"tokens":50000}}`. This is a local lifetime spending ceiling, not a declaration of your provider's real quota. Choose limits within verified free allowances and disable paid overages in the provider account. Empty or unknown quotas deny calls. The application never enables paid overages.
+Read [contracts](docs/contracts.md), [ownership](docs/ownership.md), [release status](docs/PROJECT_STATUS.md), and [Jayanth's integration handoff](docs/jayanth-handoff.md). Module notes: [Priya](docs/priya-handoff.md), [Gana](docs/gana-handoff.md), [Drashti](docs/drashti-handoff.md).
 
-The budget service distinguishes requests, tokens, credits, minutes and money. Groq reserves one request per attempt, optionally reserves a conservative token bound, and reconciles usage. A repair is a separately budgeted call. Configured money/credit/minute constraints disable Groq calls because their cost cannot be safely estimated by this adapter. Missing token counts retain the conservative reservation. Provider errors retain the request charge. Local quotas do not track calls made outside this application.
+HR-confirmed client submission and candidate notifications are implemented through a durable Gmail outbox; real sending is disabled by default and blocked outside production. See [HR review and Gmail setup](docs/hr-gmail-workflow.md). No paid overage or silent provider fallback is implemented. Phone interviews require recruiter authorization and an explicitly configured outbound number. Failed billable stages require explicit retry; uncertain interrupted stages require operator reconciliation via `scripts/recover_stage.py`. Preserve the database and Chroma path across restarts.
 
-Gemini and Ollama settings are present with explicit unavailable adapters. ElevenLabs, Keenable, Tavily, LlamaParse and Langfuse are unavailable integrations in this stage. Planning, interviewing and assessment are placeholders; reporting is implemented without an additional provider call. See `/api/capabilities` for configuration and implementation state.
-Gemini and Ollama settings are present with explicit unavailable adapters. Keenable, Tavily, LlamaParse and Langfuse remain unavailable integrations. The interview agent supports text; ElevenLabs browser mode is disabled by default until credentials, an authenticated agent, supervised operation, webhook and minute budget are configured. No telephone calling is included. See `/api/capabilities` for configuration and implementation state.
 
-`services/knowledge.py` provides a lazy persistent Chroma/LlamaIndex adapter. Set `EMBEDDING_MODEL` to a downloaded local Sentence Transformers directory. It uses CPU and local files only. Startup does not download a model or index CVs. Priya owns knowledge content and retrieval. Test embedding models are test-only.
+## HR review and updated visual design
 
-Candidate links contain random tokens in the URL fragment, never query strings, and the database stores only SHA-256 hashes. Sessions expire after `SESSION_TTL_SECONDS`. The candidate page captures the token into memory, clears the fragment and requires consent. Refreshing requires reopening the original invitation. Each case has one frozen interview session; mock ownership cannot be reassigned. Recruiter routes cannot read mock reports. An expired owning session loses report access; renewal is not implemented.
+Recruitment cases expose **My interviews ? HR review and emails**. Review the rubric and answer evidence, confirm recipients and CV sharing, connect Gmail, and explicitly approve shortlist, rejection or hold. The older report approval does not send email. [Setup, scoring, recovery and mocked verification](docs/hr-gmail-workflow.md).
 
-Default interview duration is six minutes, with an eight-minute hard cap. The server expires sessions without relying on the browser timer. Provider-side termination uses the separately verified ElevenLabs duration limit; voice must remain supervised. Unknown provider outcomes retain their reservation until confirmed or reviewed by the recruiter.
+The shared design covers landing, workspace, forms, voice controls, transcripts, reports and HR review, using the supplied TalentBridge AI logo. [Desktop full page](docs/design/screenshots/landing-1440.png), [mobile full page](docs/design/screenshots/landing-390.png), [HR desktop](docs/design/screenshots/hr-review-1440.png), [HR mobile](docs/design/screenshots/hr-review-390.png). Private workflow screenshots use explicitly labelled fictional test data.
 
-## Try the integrated text interview
 
-Until Priya's planner arrives, create an explicitly labelled fixture demo. This uses fictional data and a manually authored plan, not live AI planning or approved RAG:
+Latest workflow verification: [complete recruitment audit](docs/workflow-audit.md), including scenario coverage, the single assessment/report path, email ordering and live-provider limitations. New HR reports require the HR email decision, not legacy report approval.
 
-```powershell
-.\.venv\Scripts\python.exe scripts/create_interview_demo.py --fixture-demo --mode recruitment
-# Use --mode mock for a private mock session.
-```
 
-Open the invitation stored in `.cache/interview-demo-recruitment.txt` locally. Do not commit or log this token-bearing file. The candidate page displays the fixture warning. Consent, five questions, typed answers, stopping and completion use the real integrated APIs. Follow-ups use the shared LLM only when configured and budgeted; otherwise planned questions continue with a visible warning. Assessment/reporting remain pending.
-
-Frontend interaction tests: `npm.cmd --prefix frontend test`. Provider tests are mocked; no live call is claimed. Browser agent setup and billing/retention details are in [gana-handoff.md](docs/gana-handoff.md).
-
-## Handoff
-
-Read [contracts](docs/contracts.md), [ownership](docs/ownership.md), [contracts.py](backend/app/contracts.py), [context.py](backend/app/context.py), [repository.py](backend/app/repository.py), and [workflow.py](backend/app/workflow.py).
-
-Official references checked for implementation:
-
-- [Groq JSON output and validation](https://console.groq.com/docs/structured-outputs)
-- [Groq API endpoint and request fields](https://console.groq.com/docs/api-reference)
-- [LangGraph StateGraph compilation](https://reference.langchain.com/python/langgraph/graph/state/StateGraph/compile)
-- [Chroma persistent client](https://docs.trychroma.com/reference/python)
-- [LlamaIndex local embeddings](https://developers.llamaindex.ai/python/framework/module_guides/models/embeddings/)
+Optional local token reduction: [LLMLingua setup and scope](docs/llmlingua.md), [security review](docs/llmlingua-security-review.md). Compression protects original evidence and scoring inputs and uses no hosted model call.

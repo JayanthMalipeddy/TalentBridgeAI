@@ -1,0 +1,25 @@
+# LLMLingua security review — 10 November 2026
+
+Reviewed before installation: Microsoft's [LLMLingua repository](https://github.com/microsoft/LLMLingua), upstream commit `01b9e9481d7395e1e83a48df4a062b11f6304325`, and the published `llmlingua==0.2.2` wheel. MIT package license; the chosen Microsoft BERT compression model is Apache-2.0. No upstream examples, notebooks, web demos, setup scripts or training code are executed.
+
+Published wheel SHA-256: `da55137efe0db78063b3395396efe8a0dcfe4ae5a09aea0d503c34b7bf1d800c`. The wheel was downloaded without installation and its checksum matched PyPI metadata. Source files inside the wheel were separately inspected; the published code differs from current main.
+
+## Findings and restricted integration
+
+- Upstream `load_model` defaults to `trust_remote_code=True`. Our adapter overrides the loader, uses explicit BERT classes, disables remote code, requires local files and SafeTensors, and verifies model file hashes.
+- The older LongLLMLingua path calls `eval` on `context_budget`. Our worker calls only `compress_prompt_llmlingua2` with fixed arguments. No caller-controlled Python expression, model identifier, retrieval method, API URL or arbitrary compression settings are accepted.
+- Some optional retrieval paths can download other models or contact hosted APIs. These paths are not exposed. Compression runs in a worker with a minimal environment, no inherited API credentials, offline flags and blocked Python socket connections. This is defense in depth, not a complete OS sandbox against malicious native code.
+- Model assets are downloaded only by an explicit preparation script from an allowlisted Microsoft repository at an immutable revision. Only a fixed JSON/TXT/SafeTensors file list is permitted; no model Python or pickle files are downloaded.
+- Request text is passed through stdin, never command-line arguments, disk caches or logs. Worker stderr is discarded; only counters, elapsed time and fixed status codes enter telemetry. There is one bounded worker call at a time, a deadline and size limits.
+- Compression is limited to CV context presented for drafting questions in `planning.role`. JD requirements, source IDs, original documents and source excerpts, system/schema instructions, contacts, frozen rubrics, transcripts, assessments and email recipients/content are excluded. Compressed context is a lossy drafting aid, not scoring evidence.
+- Numeric/negated/contact-containing CV sections are protected conservatively. Outputs must be extractive and retain protected facts; otherwise the original section is used. If the complete payload does not shrink in the target tokenizer, the original payload is used. Model failure, timeout, missing files and unsupported tasks also use the original payload. No extra hosted LLM call is made for compression.
+
+## Advisory scan
+
+OSV was queried with public package names/versions only. No advisories were returned for LLMLingua 0.2.2, Transformers 5.22.1, Torch 2.15.0, tiktoken 0.14.0, NLTK 3.10.4, NumPy 2.4.6, huggingface-hub 2.4.0, SafeTensors 0.8.0 or the newly resolved Accelerate 1.15.0. This is a point-in-time scan of these packages, not a complete transitive/native dependency audit or a guarantee of security. Repeat it when dependencies change.
+
+The install also added psutil 7.2.2; its subsequent OSV check returned no advisories. A broader check covered all 184 locked PyPI entries, including optional and platform alternatives. It flagged the existing `chromadb==1.5.9` dependency under four distinct advisories (eight identifiers including aliases): [CVE-2026-45829](https://github.com/advisories/GHSA-f4j7-r4q5-qw2c), [CVE-2026-45830](https://github.com/advisories/GHSA-2wm9-hf6c-p5cr), [CVE-2026-45831](https://github.com/advisories/GHSA-xph7-9rjv-w5fr), [CVE-2026-45833](https://github.com/advisories/GHSA-36p7-vc44-83pf). The reviewed advisories list no patched version. These affect Chroma server collection/model-loading or authorization routes. TalentBridge uses `PersistentClient` internally in `backend/app/services/knowledge.py`, not an exposed Chroma HTTP service; no client API accepts embedding model repository or `trust_remote_code` parameters. This narrows exposure but is not a dependency patch. Do not expose a separate Chroma server using this version; re-evaluate before network/server deployment. LLMLingua did not introduce this dependency.
+
+Model: `microsoft/llmlingua-2-bert-base-multilingual-cased-meetingbank`, revision `5f0c82792b7ea14c6484e015b6a072009496b7f2`. SafeTensors weights SHA-256: `22b9ecde52fec5c97e8c54a293be768727df95a81c6c8dccb03f262a50c58324` (about 709 MB). JSON/tokenizer assets are hashed into the local manifest. Runtime never follows a mutable remote model revision.
+
+Residual limits: word deletion can lose nuance even when protected-token checks pass. HR must still review tailored claims and final evidence. CPU compression can add latency; reported savings must come from measured runs. The optional extra is pinned and compression remains configurable. A security review does not establish candidate-assessment accuracy.

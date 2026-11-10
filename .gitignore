@@ -17,3 +17,11 @@ data/chroma/
 .test-tmp*/
 test-results/
 playwright-report/
+graphify-out/
+.graphify_*.json
+
+# Local video narration and recording artifacts
+docs/demo/
+*.mp4
+*.mov
+*.webm

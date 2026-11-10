@@ -1,3 +1,4 @@
+import {completeRecruitmentSetup} from './recruitment-setup';
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
@@ -14,6 +15,35 @@ const example = {
   cv_text: "Fictional Alex CV",
   job_description: "Fictional role",
 };
+
+test("delete interview confirms, handles failure, and removes the row", async ({page}) => {
+  await fixture(page);
+  let attempts = 0;
+  await page.route('**/api/cases/fictional-case', async route => {
+    if (route.request().method() !== 'DELETE') return route.fallback();
+    attempts++;
+    expect(route.request().headers()['x-csrf-token']).toBe('fixture-csrf');
+    if (attempts === 1) return route.fulfill({status:409,json:{error:{code:'CASE_BUSY',message:'Wait for processing to finish before deleting this interview.'}}});
+    return route.fulfill({status:204});
+  });
+  await page.goto('/app/interviews');
+  await expect(page.getByText('Save up to 20 interviews.', {exact:false})).toBeVisible();
+  const remove = page.getByRole('button', {name:'Delete interview Integration Engineer'});
+  await expect(remove).toBeEnabled();
+  page.once('dialog', dialog => dialog.dismiss());
+  await remove.click();
+  expect(attempts).toBe(0);
+  await expect(remove).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await remove.click();
+  await expect(page.getByRole('alert')).toContainText('Wait for processing');
+  await expect(remove).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await remove.click();
+  await expect(remove).toHaveCount(0);
+  await expect(page.getByText('No interviews to show.', {exact:false})).toBeVisible();
+  expect(attempts).toBe(2);
+});
 const report = {
   case_id: example.case_id,
   report_version: "fixture-version-7",
@@ -208,24 +238,13 @@ test("validation, failure recovery, plan and honest interview state", async ({
     page.getByRole("heading", { name: "Integration Engineer", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Continue to interview" }).click();
-  await expect(
-    page.getByText("Not connected · interview has not started"),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Voice interviews are temporarily unavailable.", {
-      exact: false,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Text interview unavailable" }),
-  ).toBeDisabled();
-  await capture(page, "interview-unavailable");
-  await page
-    .getByRole("button", { name: "Check assessment availability" })
-    .click();
-  await expect(page.getByText("not assessed", { exact: true })).toBeVisible();
-  await capture(page, "assessment");
-  await page.getByRole("button", { name: "Prepare report" }).click();
+  await completeRecruitmentSetup(page);
+  await page.getByRole("button", { name: "Use text or browser interview instead" }).click();
+  await expect(page.getByRole("button", { name: "Start text interview" })).toBeEnabled();
+  await expect(page.getByRole("button", {name:"Assess saved interview"})).toBeDisabled();
+  await expect(page.getByRole("button", {name:"Review assessment and email decision"})).toBeVisible();
+  await page.getByRole("button", {name:"Reports",exact:true}).click();
+  await page.getByRole("button", {name:"Open report"}).click();
   await expect(
     page.getByText("Report version: fixture-version-7"),
   ).toBeVisible();
@@ -293,4 +312,43 @@ test("API failure preserves details and never shows a plan", async ({
   await expect(
     page.getByRole("button", { name: "Continue to interview" }),
   ).toHaveCount(0);
+});
+
+test("plan click shows progress then brings the generated plan into view", async ({page}) => {
+  await fixture(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/api/cases/*/plan", async route => { await gate; await route.fallback(); });
+  await page.goto("/app/new");
+  await page.getByRole("button", {name:"Use fictional sample"}).click();
+  const submitted = page.waitForRequest("**/api/cases/*/plan");
+  await page.getByRole("button", {name:"Create interview plan"}).click();
+  await submitted;
+  await expect(page.getByRole("button", {name:"Creating interview plan"})).toBeDisabled();
+  await expect(page.getByText(/Retrieving knowledge and generating/)).toBeInViewport();
+  release();
+  await expect(page.getByText("Interview plan ready. Review the questions, then continue to the interview.")).toBeInViewport();
+  await expect(page.getByRole("region", {name:"Generated interview plan"})).toBeFocused();
+});
+
+test("plan quota failure is shown beside the submit button", async ({page}) => {
+  await fixture(page);
+  await page.route("**/api/cases/*/plan", route => route.fulfill({status:429,json:{error:{code:"BUDGET_EXCEEDED",message:"Budget exhausted for groq/requests",retryable:false}}}));
+  await page.goto("/app/new");
+  await page.getByRole("button", {name:"Use fictional sample"}).click();
+  await page.getByRole("button", {name:"Create interview plan"}).click();
+  await expect(page.getByRole("alert")).toContainText("Budget exhausted");
+  await expect(page.getByRole("alert")).toBeInViewport();
+  await expect(page.getByRole("button", {name:"Create interview plan"})).toBeEnabled();
+  await expect(page.getByLabel("Or paste CV text")).toHaveValue(/Fictional sample/);
+});
+
+test("new interview sends the entered role instead of a fixed title", async ({page}) => {
+  await fixture(page);
+  await page.goto('/app/new');
+  await page.getByRole('button',{name:'Use fictional sample'}).click();
+  await page.getByLabel('Role',{exact:true}).fill('Accountant');
+  const submitted=page.waitForRequest(r=>r.url().endsWith('/api/cases')&&r.method()==='POST');
+  await page.getByRole('button',{name:'Create interview plan'}).click();
+  expect((await submitted).postData()).toContain('Accountant');
 });

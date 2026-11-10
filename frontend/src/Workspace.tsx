@@ -1,16 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Brand, Workflow } from "./Landing";
 import { EvidenceList, ReportView } from "./Reports";
 import { ApiError, openWorkspace, request } from "./api";
 import type { Assessment, Case, Mode, Plan, Report } from "./contracts";
+import { InterviewPage } from "./features/interview/InterviewPage";
+import {PhoneInterview} from "./features/interview/PhoneInterview";
+import {RecruitmentSetup} from "./RecruitmentSetup";
+import {HRReview} from "./HRReview";
+import {ServiceStatus} from "./ServiceStatus";
 const steps = ["Details", "Interview plan", "Interview", "Results"];
 export function Workspace() {
+  const stagePanel = useRef<HTMLElement|null>(null);
+  const [recruitmentReadyFor,setRecruitmentReadyFor] = useState<string|null>(null);
+  const [hrCaseId,setHrCaseId] = useState<string|null>(null);
+  const [operation, setOperation] = useState("");
+  const [usePhone, setUsePhone] = useState(true);
+  const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [channel, setChannel] = useState<"text"|"elevenlabs">("text");
+  const [lastStage, setLastStage] = useState<"plan"|"assess"|"report"|null>(null);
+  const [invitation, setInvitation] = useState<{session_id:string; candidate_url:string}|null>(null);
+  const [interviewDone, setInterviewDone] = useState(false);
   const [ready, setReady] = useState(false),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   const [mode, setMode] = useState<Mode>("recruitment"),
     [chosen, setChosen] = useState(location.pathname !== "/app");
+  const [role, setRole] = useState("");
   const [cv, setCv] = useState(""),
     [jd, setJd] = useState(""),
     [file, setFile] = useState<File | null>(null);
@@ -23,6 +39,14 @@ export function Workspace() {
     >([]),
     [page, setPage] = useState(location.pathname.split("/")[2] || "new"),
     [stage, setStage] = useState(0);
+  useEffect(() => {
+    if (stage === 0) return;
+    const frame = requestAnimationFrame(() => {
+      stagePanel.current?.scrollIntoView({block:"start", behavior:"instant"});
+      stagePanel.current?.focus({preventScroll:true});
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [stage]);
   async function connect(fresh = false) {
     setLoading(true);
     setError("");
@@ -48,9 +72,13 @@ export function Workspace() {
   }
   useEffect(() => {
     void connect();
+    request<{sessions:{elevenlabs:boolean}}>("/capabilities").then(c => {
+      setVoiceAvailable(c.sessions.elevenlabs);
+      if (c.sessions.elevenlabs) setChannel("elevenlabs");
+    }).catch(() => setVoiceAvailable(false));
   }, []);
   useEffect(() => {
-    if (ready && page !== "new")
+    if (ready && page !== "new" && page !== "status")
       void run(async () => setCases(await request("/cases")));
   }, [ready, page]);
   useEffect(() => {
@@ -71,13 +99,18 @@ export function Workspace() {
       if (e instanceof ApiError && e.status === 401) setReady(false);
     } finally {
       setLoading(false);
+      setOperation("");
     }
   }
   function navigate(next: string) {
     setPage(next);
     history.pushState(null, "", "/app/" + next);
     if (next === "new") {
+      setRole("");setCv("");setJd("");setFile(null);setRecruitmentReadyFor(null);
       setActive(null);
+      setInvitation(null);
+      setUsePhone(true);
+      setInterviewDone(false);
       setPlan(null);
       setReport(null);
       setAssessment(null);
@@ -88,10 +121,10 @@ export function Workspace() {
     if (!f) return;
     if (
       !/\.(pdf|docx)$/i.test(f.name) ||
-      f.size > 5 * 1024 * 1024 ||
+      f.size > 1000000 ||
       f.size === 0
     ) {
-      setError("Choose a non-empty PDF or DOCX up to 5 MB.");
+      setError("Choose a non-empty PDF or DOCX up to 1 MB.");
       return;
     }
     setFile(f);
@@ -100,46 +133,57 @@ export function Workspace() {
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if ((!file && !cv.trim()) || !jd.trim()) {
-      setError("Add a CV and job description before continuing.");
+    if ((!file && !cv.trim()) || !jd.trim() || !role.trim()) {
+      setError("Add a CV and job description, and enter the role before continuing.");
       return;
     }
     await run(async () => {
+      setOperation(file ? "Uploading and reading your CV?" : "Saving candidate details?");
       let current = active;
       if (!current) {
         const body = new FormData();
         body.set("mode", mode);
-        body.set("role", "Integration Engineer");
+        body.set("role", role.trim());
         body.set("job_description", jd);
         if (file) body.set("cv_file", file);
         else body.set("cv_text", cv);
         current = await request<Case>("/cases", "POST", body);
         setActive(current);
       }
+      setLastStage("plan");
+      setOperation("Retrieving knowledge and generating five interview questions. This may take a minute.");
       setPlan(
         await request<Plan>("/cases/" + current.case_id + "/plan", "POST"),
       );
       setStage(1);
     });
   }
-  const notice = (
-    <>
-      {loading && (
-        <p role="status" className="notice">
-          Waiting for the workspace service…
-        </p>
-      )}
-      {error && (
+  const failure = (error && (
         <div role="alert" className="error" id="workflow-error">
           <strong>Unable to continue</strong>
           <p>{error}</p>
+          {ready && chosen && <button type="button" className="secondary" onClick={() => navigate("interviews")}>View saved interviews</button>}
+          {ready && active && lastStage && <button type="button" disabled={loading} onClick={() => void run(async () => {
+            const path = "/cases/" + active.case_id + "/" + lastStage + "?retry=true";
+            if (lastStage === "plan") { setPlan(await request<Plan>(path, "POST")); setStage(1); }
+            if (lastStage === "assess") { setAssessment(await request<Assessment>(path, "POST")); setStage(3); }
+            if (lastStage === "report") setReport(await request<Report>(path, "POST"));
+          })}>Retry {lastStage} after resolving the error (may use provider quota)</button>}
           {!ready && (
-            <button onClick={() => void connect(true)} disabled={loading}>
+            <button type="button" onClick={() => void connect(true)} disabled={loading}>
               Create a new workspace
             </button>
           )}
         </div>
+      ));
+  const notice = (
+    <>
+      {loading && !(chosen && page === "new" && stage === 0) && (
+        <p role="status" className="notice">
+          Waiting for the workspace service…
+        </p>
       )}
+      {!(chosen && page === "new" && stage === 0) && failure}
     </>
   );
   if (!chosen)
@@ -183,7 +227,8 @@ export function Workspace() {
                 </label>
               ))}
             </fieldset>
-            {notice}
+            {active?.mode === "recruitment" && page === "new" && <button className="secondary" onClick={()=>{setHrCaseId(active.case_id);setPage("hr");}}>HR review and emails</button>}
+          {notice}
             <button
               disabled={!ready || loading}
               onClick={() => setChosen(true)}
@@ -215,6 +260,7 @@ export function Workspace() {
           ["new", "New interview"],
           ["interviews", "My interviews"],
           ["reports", "Reports"],
+          ["status", "Services and usage"],
         ].map(([key, label]) => (
           <button
             className={page === key ? "active" : ""}
@@ -244,8 +290,10 @@ export function Workspace() {
           <div>
             <p className="eyebrow">TALENTBRIDGE AI / {active?.mode || mode}</p>
             <h1>
-              {page === "new"
+              {page === "hr" ? "HR review and communications" : page === "new"
                 ? "A better conversation starts here."
+                : page === "status"
+                  ? "Services and usage"
                 : page === "reports"
                   ? "Your reports"
                   : page === "overview"
@@ -258,13 +306,14 @@ export function Workspace() {
           </span>
         </header>
         {notice}
-        {page !== "new" ? (
+        {page === "hr" && hrCaseId ? <HRReview key={hrCaseId} caseId={hrCaseId}/> : page === "status" ? <ServiceStatus/> : page !== "new" ? (
           <section className="panel">
             <h2>
               {page === "reports"
                 ? "Reports for your interviews"
                 : "Your interviews"}
             </h2>
+            {page === "interviews" && <p>Save up to 20 interviews. Delete an interview to free a space.</p>}
             {cases.length === 0 ? (
               <p>No interviews to show. Create an interview to get started.</p>
             ) : (
@@ -296,10 +345,17 @@ export function Workspace() {
                           setJd(data.case.job_description);
                           setMode(data.case.mode);
                           setFile(null);
-                          setStage(0);
+                          try {
+                            setPlan(await request<Plan>("/cases/" + c.case_id + "/plan"));
+                            setStage(1);
+                            try {
+                              await request("/cases/" + c.case_id + "/interview");
+                              setStage(2);
+                            } catch { /* No saved interview yet. */ }
+                          } catch { setPlan(null); setStage(0); }
+                          setInvitation(null);
                           setReport(null);
                         }
-                        setPlan(null);
                         setAssessment(null);
                         setActive(data.case);
                         setPage("new");
@@ -309,6 +365,21 @@ export function Workspace() {
                   >
                     Open {page === "reports" ? "report" : "case"}
                   </button>
+                  {c.mode === "recruitment" && <button type="button" className="secondary" onClick={()=>{setHrCaseId(c.case_id);setPage("hr");}}>HR review and emails</button>}
+                  <button type="button" className="secondary" disabled={!ready || loading}
+                    aria-label={`Delete interview ${c.role}`}
+                    onClick={() => {
+                      if (!window.confirm("Delete this interview and its saved CV, answers and reports from this workspace? This cannot be undone. Any copies held by the voice provider are not deleted.")) return;
+                      void run(async () => {
+                        await request("/cases/" + c.case_id, "DELETE");
+                        setCases(previous => previous.filter(item => item.case_id !== c.case_id));
+                        if (active?.case_id === c.case_id) {
+                          setActive(null); setPlan(null); setAssessment(null); setReport(null);
+                          setInvitation(null); setInterviewDone(false); setLastStage(null);
+                          setCv(""); setJd(""); setFile(null); setStage(0);
+                        }
+                      });
+                    }}>Delete</button>
                 </div>
               ))
             )}
@@ -346,7 +417,7 @@ export function Workspace() {
                   </label>
                   <label>
                     Role
-                    <input value="Integration Engineer" readOnly />
+                    <input value={active?.role ?? role} maxLength={200} disabled={!!active} onChange={e=>setRole(e.target.value)} placeholder="Enter the job title" />
                   </label>
                 </div>
                 <label
@@ -358,7 +429,7 @@ export function Workspace() {
                   }}
                 >
                   Upload CV<strong>Drop a PDF or DOCX here</strong>
-                  <span>or choose a file · up to 5 MB</span>
+                  <span>or choose a file · up to 1 MB</span>
                   <input
                     type="file"
                     accept=".pdf,.docx"
@@ -379,8 +450,7 @@ export function Workspace() {
                   </p>
                 )}
                 <p className="muted">
-                  Document parsing is pending backend integration. You can paste
-                  CV text below.
+                  PDF and DOCX are parsed locally. You can also paste CV text below.
                 </p>
                 <label>
                   Or paste CV text
@@ -408,9 +478,11 @@ export function Workspace() {
                   Both a CV and a job description are required. Details stay on
                   this page after a failed request.
                 </p>
+                {failure}
+                {loading && <p role="status" aria-live="polite" className="notice">{operation || "Connecting to your workspace?"}</p>}
                 <div className="actions">
-                  <button disabled={!ready || loading}>
-                    Create interview plan →
+                  <button type="submit" disabled={!ready || loading} aria-busy={loading}>
+                    {loading ? (ready ? "Creating interview plan?" : "Connecting workspace?") : "Create interview plan ?"}
                   </button>
                   <button
                     type="button"
@@ -418,6 +490,7 @@ export function Workspace() {
                     disabled={!!active}
                     onClick={() => {
                       setFile(null);
+                      setRole("Integration Engineer");
                       setCv(
                         "Fictional sample: Alex Morgan, Integration Engineer. Three years building REST APIs, webhook integrations and retry queues. Experience with Python, SQL and monitoring.",
                       );
@@ -432,7 +505,8 @@ export function Workspace() {
               </form>
             )}
             {stage === 1 && plan && (
-              <section className="panel">
+              <section className="panel" ref={stagePanel} tabIndex={-1} aria-label="Generated interview plan">
+                <p role="status" className="notice">Interview plan ready. Review the questions, then continue to the interview.</p>
                 <p className="eyebrow">02 / INTERVIEW PLAN</p>
                 <h2>{active?.role}</h2>
                 <p>
@@ -458,33 +532,39 @@ export function Workspace() {
               </section>
             )}
             {stage === 2 && (
-              <section className="panel">
+              <section className="panel" ref={stagePanel} tabIndex={-1}>
                 <p className="eyebrow">03 / INTERVIEW</p>
-                <h2>A moment to prepare.</h2>
-                <span className="tag">
-                  Not connected · interview has not started
-                </span>
-                <p>
-                  Voice interviews are temporarily unavailable. You can continue
-                  with a text interview once the interview service is connected.
-                </p>
-                <p>
-                  No microphone is being used. Gana’s interview component has
-                  not been supplied in this branch.
-                </p>
-                <button className="secondary" disabled>
-                  Text interview unavailable
-                </button>
-                <h3>Processing status</h3>
+                <h2>Your interview</h2>
+                {active?.mode === "recruitment" && recruitmentReadyFor !== active.case_id ? <RecruitmentSetup key={active.case_id} caseId={active.case_id} onReady={()=>setRecruitmentReadyFor(active.case_id)}/> : active?.mode === "recruitment" && usePhone ? <>
+                  <PhoneInterview key={active.case_id} caseId={active.case_id} onReview={()=>{setHrCaseId(active.case_id);setPage("hr");}} onResults={(a,r)=>{setAssessment(a);setReport(r);setStage(3);}} />
+                  <button className="secondary" onClick={()=>setUsePhone(false)}>Use text or browser interview instead</button>
+                </> : <>
+                {!invitation && <>
+                  <label>Interview channel<select value={channel} onChange={e => setChannel(e.target.value as "text"|"elevenlabs")}>
+                    <option value="elevenlabs" disabled={!voiceAvailable}>ElevenLabs browser voice{!voiceAvailable ? " ? setup required" : ""}</option>
+                    <option value="text">Text interview</option>
+                  </select></label>
+                  <p>{voiceAvailable ? "The candidate opens the invitation and speaks with the AI interviewer using their microphone." : "ElevenLabs voice setup is incomplete. Text is available as a clearly labelled alternative."}</p>
+                </>}
+                {!invitation && <button disabled={loading || !active} onClick={() => void run(async () => {
+                  const link = await request<{session_id:string; candidate_url:string}>("/cases/" + active!.case_id + "/sessions", "POST", {channel});
+                  setInvitation(link);
+                })}>Start {channel === "elevenlabs" ? "voice" : "text"} interview</button>}
+                {invitation && <>
+                  <p><a href={invitation.candidate_url} target="_blank" rel="noreferrer">Open candidate invitation</a></p>
+                  <InterviewPage sessionId={invitation.session_id} candidateToken={new URLSearchParams(new URL(invitation.candidate_url).hash.slice(1)).get("token") || ""} onCompleted={() => {setInterviewDone(true);if(active?.mode === "recruitment"){setHrCaseId(active.case_id);setPage("hr");}}} />
+                </>}
+                <h3>Processing status</h3>{active?.mode === "recruitment"&&<button onClick={()=>{setHrCaseId(active.case_id);setPage("hr");}}>Review assessment and email decision</button>}
                 <p>
                   Transcript: awaiting interview · Assessment: not started ·
                   Report: not started
                 </p>
                 <button
-                  disabled={!ready || loading}
+                  disabled={!ready || loading || active?.mode === "recruitment"}
                   onClick={() =>
                     void run(async () => {
                       if (!active) return;
+                      setLastStage("assess");
                       setAssessment(
                         await request<Assessment>(
                           "/cases/" + active.case_id + "/assess",
@@ -495,16 +575,20 @@ export function Workspace() {
                     })
                   }
                 >
-                  Check assessment availability
+                  Assess saved interview
                 </button>
+                </>}
               </section>
             )}
             {stage === 3 && (
-              <section className="panel">
+              <section className="panel" ref={stagePanel} tabIndex={-1}>
+                {active?.mode === "recruitment" && <button onClick={()=>{setHrCaseId(active.case_id);setPage("hr");}}>Review assessment and approve emails</button>}
                 {assessment && (
                   <>
                     <h2>Assessment</h2>
-                    <p>Coverage: {Math.round(assessment.coverage * 100)}%</p>
+                    {assessment.recommendation && <p><strong>Recommendation: {assessment.recommendation.replaceAll("_", " ")}</strong></p>}
+                    <p>Scored skill coverage: {Math.round(assessment.coverage * 100)}%. This is not the candidate's overall score.</p>
+                    <p>Review the answer evidence and limitations below. The recommendation supports the recruiter's final decision.</p>
                     {assessment.skills.map((s) => (
                       <article className="question" key={s.skill}>
                         <h3>{s.skill}</h3>
@@ -525,14 +609,15 @@ export function Workspace() {
                     <button
                       disabled={!ready || loading}
                       onClick={() =>
-                        void run(async () =>
+                        void run(async () => {
+                          setLastStage("report");
                           setReport(
                             await request<Report>(
                               "/cases/" + active!.case_id + "/report",
                               "POST",
                             ),
-                          ),
-                        )
+                          );
+                        })
                       }
                     >
                       Prepare report
@@ -541,6 +626,7 @@ export function Workspace() {
                 )}
                 {report && (
                   <ReportView
+                    reviewDecision={()=>{setHrCaseId(report!.case_id);setPage("hr");}}
                     report={report}
                     busy={loading}
                     approve={() =>

@@ -1,0 +1,20 @@
+{
+  "locked_package_entries_scanned": 184,
+  "findings": [
+    {
+      "name": "chromadb",
+      "version": "1.5.9",
+      "advisories": [
+        "GHSA-2wm9-hf6c-p5cr",
+        "GHSA-36p7-vc44-83pf",
+        "GHSA-f4j7-r4q5-qw2c",
+        "GHSA-xph7-9rjv-w5fr",
+        "PYSEC-2026-311",
+        "PYSEC-2026-3813",
+        "PYSEC-2026-3814",
+        "PYSEC-2026-3815"
+      ]
+    }
+  ],
+  "scope": "All locked PyPI entries, including platform alternatives and optional dependencies; OSV point-in-time check."
+}
