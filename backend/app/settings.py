@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     planning_enable_tavily_fallback: bool = False
     planning_llamaparse_tier: str = ""
     llm_max_completion_tokens: int = Field(default=4096, ge=256, le=8192)
+    llmlingua_enabled: bool = False
+    llmlingua_rate: float = Field(default=0.8, ge=0.5, le=0.95, allow_inf_nan=False)
+    llmlingua_min_chars: int = Field(default=1000, ge=100, le=16000)
+    llmlingua_min_saved_tokens: int = Field(default=20, ge=1)
+    llmlingua_timeout_seconds: float = Field(default=45, ge=1, le=90, allow_inf_nan=False)
     interview_followups_enabled: bool = True
     gmail_client_id: str = ""
     gmail_client_secret: SecretStr = SecretStr("")

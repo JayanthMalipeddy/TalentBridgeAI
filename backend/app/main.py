@@ -136,6 +136,7 @@ def create_app(settings: Settings | None = None):
         integrations = {name: {"configured": value, "available": False, "reason": "Integration pending"} for name, value in configured.items()}
         integrations["elevenlabs"] = {"configured": configured["elevenlabs"], "available": voice_available(settings), "reason": "Supervised browser mode; provider configuration and minute quota checked at authorization"}
         integrations["langfuse"] = request.app.state.ctx.telemetry.capability()
+        integrations["prompt_compression"] = request.app.state.ctx.llm.compression.capability()
         integrations["knowledge"] = {"configured": bool(settings.embedding_model), "available": Path(settings.embedding_model).is_dir() and (Path(settings.chroma_path) / "planning_index_manifest.json").is_file(), "provisional_criteria": settings.planning_allow_pending_review, "reason": "Only human-reviewed records may be used for scoring; provisional feedback withholds scores"}
         return {"providers": request.app.state.ctx.llm.capabilities(), "agents": agents, "sessions": {"text": True, "elevenlabs": voice_available(settings)}, "phone": phone.capability(settings), "integrations": integrations, "fixture_demo": settings.app_env == "fixture-demo"}
 

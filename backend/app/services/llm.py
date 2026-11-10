@@ -3,11 +3,13 @@ import time
 import httpx
 from pydantic import ValidationError
 from ..errors import AppError
+from .compression import PromptCompression
 
 
 class LLMClient:
     def __init__(self, settings, budget, telemetry, transport=None):
         self.settings, self.budget, self.telemetry, self.transport = settings, budget, telemetry, transport
+        self.compression=PromptCompression(settings)
 
     def capabilities(self):
         s = self.settings
@@ -28,6 +30,8 @@ class LLMClient:
         unsupported = set(self.budget.limits.get(provider, {})) - {"requests", "tokens"}
         if unsupported:
             raise AppError("QUOTA_UNSUPPORTED", "Groq adapter cannot estimate credits, minutes or money; calls disabled for these limits", 503)
+        user_payload,compression=await self.compression.prepare(task,user_payload)
+        with self.telemetry.observation('prompt_compression',metadata={'task':task,**compression}):pass
         messages = [{"role": "system", "content": system_prompt + "\nReturn only JSON matching this schema: " + json.dumps(response_model.model_json_schema())}, {"role": "user", "content": json.dumps(user_payload)}]
         for attempt in range(2):
             reservation = self.budget.reserve(provider, "requests", 1)
@@ -68,7 +72,7 @@ class LLMClient:
                     elapsed = time.monotonic() - started
                     if token_reservation:
                         self.budget.reconcile(token_reservation, tokens if isinstance(tokens, int) and tokens >= 0 else token_bound)
-                    self.budget.reconcile(reservation, 1, {"model": model, "tokens": tokens, "elapsed_seconds": elapsed, "error": error})
+                    self.budget.reconcile(reservation, 1, {"model": model, "tokens": tokens, "elapsed_seconds": elapsed, "error": error,"compression":compression})
                     self.telemetry.record(provider=provider, model=model, tokens=tokens, elapsed_seconds=elapsed, error=error)
                     observation.update(metadata={"provider": provider, "attempt": attempt + 1, "elapsed_seconds": elapsed, "error_code": error or "none"},
                         usage_details={"total": tokens} if isinstance(tokens, int) and tokens >= 0 else {},

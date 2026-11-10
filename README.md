@@ -68,3 +68,6 @@ The shared design covers landing, workspace, forms, voice controls, transcripts,
 
 
 Latest workflow verification: [complete recruitment audit](docs/workflow-audit.md), including scenario coverage, the single assessment/report path, email ordering and live-provider limitations. New HR reports require the HR email decision, not legacy report approval.
+
+
+Optional local token reduction: [LLMLingua setup and scope](docs/llmlingua.md), [security review](docs/llmlingua-security-review.md). Compression protects original evidence and scoring inputs and uses no hosted model call.

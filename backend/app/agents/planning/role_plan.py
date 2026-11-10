@@ -74,6 +74,7 @@ async def build_role_plan(case, ctx):
         'Generate original questions, not copies of document text. For each question select source_ids from the supplied sections: '
         'at least one job_description section for the requirement and CV sections when tailoring to a stated experience claim. '
         'Return only existing section IDs; the application attaches the original source text. Do not generate evidence quotations. '
+        'CV sections marked abridged are lossy drafting context: use only unambiguous claims and never infer missing experience. '
         'No knowledge sources are provided: do not fabricate references. '
         'Provide expected topics and explicit 0–3 scoring anchors accepting alternative valid approaches. '
         'These are provisional AI-generated criteria, not a human-approved knowledge library.',
@@ -91,6 +92,8 @@ async def build_role_plan(case, ctx):
         questions.append(Question(question_id=f'role-q{index}', evidence=evidence,
             **question.model_dump(exclude={'source_ids'})))
     warnings = ['No approved role-specific knowledge library is configured for this role. Questions use the supplied JD and CV; criteria are not yet human-approved.']
+    if getattr(getattr(ctx,'settings',None),'llmlingua_enabled',False):
+        warnings.append('CV drafting context may be locally abridged. Supporting excerpts are original; review tailored experience claims before interviewing.')
     if len(case.cv_text)>12000 or len(case.job_description)>12000:
         warnings.append('Only the first 12000 characters of each document were included in planning.')
     payload = {'role':case.role, 'questions':[q.model_dump() for q in questions], 'prompt_version':'role-plan-2'}
